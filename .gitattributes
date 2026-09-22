@@ -1,0 +1,5 @@
+# Shell scripts must keep Unix LF endings; CRLF makes Bash parse options such as
+# `pipefail` as `pipefail\r` on Debian.
+*.sh text eol=lf
+*.service text eol=lf
+*.env.example text eol=lf

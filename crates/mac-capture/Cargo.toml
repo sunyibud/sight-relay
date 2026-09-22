@@ -1,0 +1,38 @@
+[package]
+name = "mac-capture"
+version = "1.2.0"
+edition = "2024"
+
+[dependencies]
+dotenvy = "0.15"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+thiserror = "2"
+xcap = "0.7"
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+semver = "1"
+reqwest = { version = "0.12", features = ["multipart", "rustls-tls", "blocking"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+eframe = "0.33"
+global-hotkey = "0.7"
+tray-icon = "0.21"
+tungstenite = { version = "0.26", features = ["rustls-tls-native-roots"] }
+arboard = "3.6"
+
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+wry = "0.47"
+tao = "0.30"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+core-graphics = "0.24"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_System_LibraryLoader", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+winresource = "0.1"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,28 @@
+[package]
+name = "sight-relay-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dotenvy = "0.15"
+axum = { version = "0.8", features = ["multipart", "ws"] }
+tower-http = { version = "0.6", features = ["cors"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+sha2 = "0.10"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4", "fast-rng", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
+tokio-stream = "0.1"
+tokio-util = "0.7"
+argon2 = "0.5"
+rand = "0.8"
+aws-config = "1"
+aws-credential-types = "1"
+aws-sdk-s3 = "1"

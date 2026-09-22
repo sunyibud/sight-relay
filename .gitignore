@@ -1,0 +1,39 @@
+# Local/editor state
+.serena/
+.DS_Store
+Thumbs.db
+
+# Rust/build outputs
+target/
+dist/
+build/
+
+# Local documentation and planning notes
+doc/
+
+# Local secrets and runtime configuration. Keep only *.env.example templates.
+.env
+*.env
+*.local
+config.env
+**/config.env
+
+# Runtime data, uploaded captures, SQLite sidecars and logs
+data/
+captures/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.log
+
+# Release archives and platform artifacts
+*.dmg
+*.zip
+*.tar.gz
+*.exe
+*.msi
+
+# Legacy standalone web prototypes. The Capture page is still compiled from web/.
+web/*
+!web/capture-client.html

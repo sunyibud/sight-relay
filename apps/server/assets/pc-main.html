@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>题目解析 · 极简单屏版</title>
+<style>
+:root{
+  --bg:#f7f9fc;
+  --panel:#fff;
+  --line:#dfe6f2;
+  --text:#17223b;
+  --muted:#71809a;
+  --blue:#3f7cff;
+  --soft-blue:#f3f7ff;
+  --soft-green:#effaf4;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);overflow:hidden;
+}
+.app{height:100vh;display:grid;grid-template-rows:42px minmax(0,1fr)}
+.topbar{
+  height:42px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.96);
+}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-size:18px;line-height:1;font-weight:800;color:#10244c;letter-spacing:-.02em}
+.brand span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{display:flex;align-items:center;gap:3px;padding:3px;border-radius:10px;background:#f2f5fa;font-size:12px;color:#7b879c;white-space:nowrap}
+.status-item{display:flex;align-items:center;gap:6px;min-height:26px;padding:4px 8px;border-radius:7px;transition:background-color .16s,color .16s,box-shadow .16s}
+.dot{width:7px;height:7px;border-radius:50%;background:#c5cfdd;box-shadow:inset 0 0 0 1px rgba(23,35,60,.06)}
+.status-item.done:not(.current){color:#3567c8}
+.status-item.done:not(.current) .dot{background:#3f7cff;box-shadow:0 0 0 3px rgba(63,124,255,.10)}
+.status-item.current{background:#3f7cff;color:#fff;font-weight:750;box-shadow:0 3px 9px rgba(63,124,255,.24)}
+.status-item.current .dot{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.20)}
+.status-item.error{background:#fff1f2;color:#c6293d;font-weight:750;box-shadow:inset 0 0 0 1px #fecdd3}
+.status-item.error .dot{background:#dc3b4b;box-shadow:0 0 0 3px rgba(220,59,75,.12)}
+.main{min-height:0;display:grid;grid-template-columns:minmax(330px,40%) 1px minmax(520px,60%);background:#fff}
+.divider{background:var(--line)}
+.image-pane,.md-pane{min-width:0;min-height:0;position:relative;background:#fff}
+.image-pane{display:flex;flex-direction:column;gap:10px;padding:52px 18px 14px}
+.image-status{position:absolute;top:12px;left:16px;z-index:2}
+.connection{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+.connection .signal{width:8px;height:8px;border-radius:50%;background:#b9c4d7}
+.connection.online .signal{background:#3f7cff;box-shadow:0 0 0 3px rgba(63,124,255,.12)}
+.connection .help{width:18px;height:18px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-weight:700;color:#71809a;margin-left:2px}
+.settings-fab{position:fixed;left:16px;bottom:16px;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.96);color:#5f6f8c;display:grid;place-items:center;box-shadow:0 6px 18px rgba(31,52,89,.12);cursor:pointer;z-index:10;text-decoration:none;font-size:18px}.settings-fab:hover{color:var(--blue);border-color:#bcd1ff}
+.image-frame{
+  width:100%;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:#fbfcfe;border-radius:10px;
+}
+.image-frame img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}.image-frame img[src="about:blank"]{display:none}
+.group-switcher[hidden]{display:none}
+.group-switcher{display:flex;align-items:center;justify-content:center;gap:12px;width:min(100%,360px);min-height:42px;margin:0 auto;padding:5px 8px;border:1px solid var(--line);border-radius:12px;background:#f8fbff;box-shadow:0 4px 12px rgba(31,52,89,.06)}.group-switcher button{min-width:78px;height:32px;padding:0 12px;border:1px solid #cbdcff;border-radius:8px;background:#fff;color:var(--blue);font-size:12px;font-weight:650;cursor:pointer;transition:background-color .15s,border-color .15s,transform .15s}.group-switcher button:hover:not(:disabled){background:#eef4ff;border-color:#a9c3ff}.group-switcher button:active:not(:disabled){transform:scale(.96)}.group-switcher button:disabled{opacity:.35;cursor:default}.group-switcher span{min-width:92px;text-align:center;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}.analysis-kind{display:inline-flex;align-items:center;margin-left:8px;padding:3px 7px;border-radius:999px;background:#eef4ff;color:#2f63c7;font-size:11px;font-weight:700}
+.pc-image-zoom{cursor:zoom-in;border-radius:6px}.pc-image-lightbox{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:rgba(8,17,35,.92);color:#fff;animation:pc-lightbox-in .16s ease-out}.pc-image-lightbox-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 22px;background:rgba(8,17,35,.72)}.pc-image-lightbox-head strong{font-size:15px}.pc-image-lightbox-head small{color:#b8c6df}.pc-image-lightbox-close{display:grid;place-items:center;width:44px;height:44px;border:1px solid rgba(255,255,255,.26);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-size:22px;cursor:pointer}.pc-image-lightbox-stage{display:grid;place-items:center;flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab}.pc-image-lightbox-stage:active{cursor:grabbing}.pc-image-lightbox-stage img{max-width:92vw;max-height:calc(100vh - 132px);object-fit:contain;transform-origin:center;user-select:none;will-change:transform}.pc-image-lightbox-help{padding:10px 22px 16px;text-align:center;color:#b8c6df;font-size:12px}@keyframes pc-lightbox-in{from{opacity:0}to{opacity:1}}
+.image-meta{
+  position:static;display:flex;gap:8px;align-items:center;justify-content:center;
+  min-height:18px;padding:0;color:var(--muted);font-size:11px;opacity:1;
+}
+.image-meta i{width:3px;height:3px;border-radius:50%;background:#b9c4d7}
+.md-pane{overflow:auto;padding:12px 18px 18px}
+.markdown{font-size:15px;line-height:1.56;color:#283957;max-width:none}
+.markdown>*:first-child{margin-top:0}
+.markdown>*:last-child{margin-bottom:0}
+.markdown h1{font-size:23px;line-height:1.25;margin:0 0 8px;font-weight:800;color:#143eaa;letter-spacing:-.02em}
+.markdown h2{font-size:17px;line-height:1.3;margin:12px 0 6px;font-weight:800;color:#1d4ed8}
+.markdown p{margin:0 0 8px}
+.markdown blockquote{margin:6px 0 10px;padding:8px 12px;border-left:3px solid #bcd1ff;background:var(--soft-blue);border-radius:8px;color:#38507b}
+.markdown ol{margin:4px 0 8px 22px;padding:0}
+.markdown li{margin:2px 0}
+.answer{margin:6px 0 10px;padding:8px 12px;border-radius:8px;background:var(--soft-green);border:1px solid #dcefe4}
+.markdown pre{margin:6px 0 0;padding:10px 12px;background:#f7f9fc;border:1px solid #e3e9f2;border-radius:8px;overflow:auto}
+.markdown code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.45;color:#2450b7}
+.markdown .code-block{position:relative;padding:28px 14px 12px;background:#101a2b;border:1px solid #223553;border-radius:10px;color:#e8eef9;box-shadow:0 4px 12px rgba(20,39,72,.08)}
+.markdown .code-block::before{content:attr(data-language);position:absolute;top:7px;left:12px;color:#8ca4c8;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
+.markdown .code-block code{display:block;color:#e8eef9;white-space:pre;tab-size:2}
+.markdown table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #dfe6f2;border-radius:8px;overflow:hidden;font-size:13px;margin:5px 0 9px}
+.markdown th,.markdown td{padding:6px 8px;border-right:1px solid #e5eaf2;border-bottom:1px solid #e5eaf2;text-align:left;vertical-align:top}
+.markdown th{background:#f3f7ff;color:#173c8b;font-weight:750}.markdown tr:last-child td{border-bottom:0}.markdown th:last-child,.markdown td:last-child{border-right:0}.markdown .table-wrap{overflow:auto;margin:5px 0 9px}
+.markdown a{color:#2563c7;text-decoration:underline;text-underline-offset:2px}.markdown del{color:#71809a}.markdown hr{border:0;border-top:1px solid #dfe6f2;margin:9px 0}.markdown .task{display:inline-block;width:1.1em;color:#6b7d9a}.markdown .task.checked{color:#15966d}.markdown .md-inline-image{max-width:100%;height:auto;border-radius:6px;vertical-align:middle;outline:1px solid rgba(0,0,0,.1)}
+@media (max-width:980px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh;grid-template-rows:38px auto}
+  .main{grid-template-columns:1fr}
+  .divider{display:none}
+  .image-pane{height:46vh;min-height:300px}
+  .md-pane{overflow:visible}
+  .brand span{display:none}
+  .status{gap:7px}
+  .status-item span:last-child{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><b>题目解析</b><span>查看题目图片与解析结果</span></div>
+    <div class="connection" id="connection"><span class="signal"></span><span id="connectionText">连接中</span><span class="help" title="Capture 心跳与 server 连接状态">?</span></div>
+  </header>
+
+  <main class="main">
+    <section class="image-pane">
+      <div class="image-status"><div class="status" aria-label="处理状态">
+        <div class="status-item"><span class="dot"></span><span>上传</span></div>
+        <div class="status-item"><span class="dot"></span><span>解析</span></div>
+        <div class="status-item"><span class="dot"></span><span>完成</span></div>
+      </div></div>
+      <div class="image-frame">
+        <img class="pc-image-zoom" src="about:blank" alt="题目图片" tabindex="0" role="button" aria-label="放大查看题目图片" />
+      </div>
+      <div class="group-switcher group-switcher-bottom" hidden><button type="button" data-group-prev aria-label="上一页">上一页</button><span data-group-label>题目组</span><button type="button" data-group-next aria-label="下一页">下一页</button></div>
+      <div class="image-meta" style="display:none"></div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="md-pane">
+      <article class="markdown"><h1>暂无截图</h1><p>等待 Capture 上传第一张截图。</p></article>
+    </section>
+  </main>
+</div>
+<a class="settings-fab" href="/settings" aria-label="打开设置" title="打开设置">⚙</a>
+</body>
+<script>
+(()=>{
+  const img=document.querySelector('.image-frame img'), meta=document.querySelector('.image-meta'), md=document.querySelector('.markdown'), connection=document.querySelector('.connection'), connectionText=document.querySelector('#connectionText');
+  const groupSwitchers=[...document.querySelectorAll('.group-switcher')], groupLabels=[...document.querySelectorAll('[data-group-label]')], groupPrev=[...document.querySelectorAll('[data-group-prev]')], groupNext=[...document.querySelectorAll('[data-group-next]')];
+  const closeImageLightbox=()=>document.querySelector('[data-pc-image-lightbox]')?.remove();
+  const openImageLightbox=()=>{
+    if(!img?.src||img.src.endsWith('/about:blank'))return;
+    closeImageLightbox();
+    document.body.insertAdjacentHTML('beforeend',`<div class="pc-image-lightbox" role="dialog" aria-modal="true" aria-label="放大查看题目图片" data-pc-image-lightbox><header class="pc-image-lightbox-head"><div><strong>题目图片</strong><br><small>滚轮缩放 · 双击切换 · 拖拽查看细节</small></div><button type="button" class="pc-image-lightbox-close" aria-label="关闭图片预览" data-pc-image-close>×</button></header><div class="pc-image-lightbox-stage" data-pc-image-stage><img src="${img.src}" alt="放大后的题目图片" draggable="false" data-pc-image-preview></div><div class="pc-image-lightbox-help">按 Esc 关闭预览</div></div>`);
+    const lightbox=document.querySelector('[data-pc-image-lightbox]'),close=lightbox.querySelector('[data-pc-image-close]'),stage=lightbox.querySelector('[data-pc-image-stage]'),preview=lightbox.querySelector('[data-pc-image-preview]');
+    let scale=1,offsetX=0,offsetY=0,pointer=null;
+    const update=()=>{preview.style.transform=`translate(${offsetX}px,${offsetY}px) scale(${scale})`};
+    const reset=()=>{scale=1;offsetX=0;offsetY=0;update()};
+    close.addEventListener('click',closeImageLightbox);
+    lightbox.addEventListener('click',event=>{if(event.target===lightbox)closeImageLightbox()});
+    stage.addEventListener('wheel',event=>{event.preventDefault();scale=Math.min(4,Math.max(1,scale*(event.deltaY<0?1.15:.87)));if(scale===1){offsetX=0;offsetY=0}update()},{passive:false});
+    stage.addEventListener('dblclick',()=>{if(scale===1)scale=2.5;else reset();update()});
+    stage.addEventListener('pointerdown',event=>{if(scale<=1)return;pointer={id:event.pointerId,x:event.clientX,y:event.clientY};stage.setPointerCapture(event.pointerId)});
+    stage.addEventListener('pointermove',event=>{if(!pointer||pointer.id!==event.pointerId)return;offsetX+=event.clientX-pointer.x;offsetY+=event.clientY-pointer.y;pointer.x=event.clientX;pointer.y=event.clientY;update()});
+    const release=event=>{if(pointer?.id===event.pointerId)pointer=null};stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);close.focus();
+  };
+  img.addEventListener('click',openImageLightbox);img.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openImageLightbox()}});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('[data-pc-image-lightbox]'))closeImageLightbox()});
+  const items=[...document.querySelectorAll('.status-item')], stages={upload:0,parsing:1,complete:2};
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const inline=s=>{
+    let value=esc(s),codes=[];
+    value=value.replace(/`([^`\n]+)`/g,(_,code)=>{const i=codes.push(`<code>${code}</code>`)-1;return `\u0000${i}\u0000`});
+    value=value.replace(/!\[([^\]]*)\]\(([^\s)]+)(?:\s+["']([^"']*)["'])?\)/g,(_,alt,url,title)=>`<img class="md-inline-image" src="${url}" alt="${alt}"${title?` title="${title}"`:''}>`);
+    value=value.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    value=value.replace(/\*\*(.+?)\*\*|__(.+?)__/g,(_,a,b)=>`<strong>${a||b}</strong>`)
+      .replace(/~~(.+?)~~/g,'<del>$1</del>')
+      .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)|(?<!_)_([^_\n]+)_(?!_)/g,(_,a,b)=>`<em>${a||b}</em>`);
+    return value.replace(/\u0000(\d+)\u0000/g,(_,i)=>codes[Number(i)]);
+  };
+  const render=s=>{
+    const normalized=String(s).replace(/\r\n?/g,'\n')
+      .replace(/^##\s*(?:题目|题目原文|选项)(?:\s*[（(].*?[）)])?\s*$/gm,'## 题目')
+      .replace(/^##\s*(?:答案和解析|答案|简短解析|详细解析)(?:\s*[（(].*?[）)])?\s*$/gm,'## 答案和解析');
+    const lines=normalized.split('\n'),out=[];let list=null,codeLines=null,codeLang='';
+    const closeList=()=>{if(list){out.push(`</${list}>`);list=null}};
+    const closeCode=()=>{if(codeLines){const lang=codeLang?` data-language="${esc(codeLang)}"`:'';out.push(`<pre class="code-block"${lang}><code>${esc(codeLines.join('\n'))}</code></pre>`);codeLines=null;codeLang=''}};
+    const isTableDivider=line=>/^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+    const tableCells=line=>line.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(x=>x.trim());
+    for(let i=0;i<lines.length;i++){
+      const raw=lines[i],line=raw.trim();
+      if(codeLines){if(/^\s*```/.test(line)){closeCode()}else codeLines.push(raw);continue}
+      if(/^\s*```/.test(line)){closeList();codeLang=line.replace(/^```/,'').trim();codeLines=[];continue}
+      if(!line){closeList();continue}
+      let m;
+      if(i+1<lines.length&&line.includes('|')&&isTableDivider(lines[i+1])){
+        closeList();const headers=tableCells(line),aligns=tableCells(lines[++i]),rows=[];
+        while(i+1<lines.length&&lines[i+1].trim().includes('|')&&lines[i+1].trim())rows.push(tableCells(lines[++i]));
+        out.push('<div class="table-wrap"><table><thead><tr>'+headers.map((h,n)=>`<th>${inline(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+headers.map((_,n)=>`<td>${inline(row[n]||'')}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>');continue;
+      }
+      if((m=line.match(/^(#{1,6})\s+(.+)$/))){closeList();const level=Math.min(6,m[1].length);out.push(`<h${level}>${inline(m[2])}</h${level}>`);continue}
+      if(/^\s*(---+|\*\s*\*\s*\*|___+)\s*$/.test(line)){closeList();out.push('<hr>');continue}
+      if((m=line.match(/^([-*+])\s+(.+)$/))||(m=line.match(/^(\d+)[.)]\s+(.+)$/))){const ordered=/^\d/.test(line),tag=ordered?'ol':'ul';if(list!==tag){closeList();out.push(`<${tag}>`);list=tag}const content=m[2],checked=content.match(/^\[([ xX])\]\s+(.+)$/);out.push(`<li>${checked?`<span class="task ${checked[1].toLowerCase()==='x'?'checked':''}">${checked[1].toLowerCase()==='x'?'✓':'○'}</span> `:''}${inline(checked?checked[2]:content)}</li>`);continue}
+      if((m=line.match(/^>\s?(.*)$/))){closeList();const quote=[m[1]];while(i+1<lines.length&&/^>\s?/.test(lines[i+1]))quote.push(lines[++i].replace(/^>\s?/,''));out.push(`<blockquote>${quote.map(x=>inline(x)).join('<br>')}</blockquote>`);continue}
+      closeList();const answer=line.match(/^答案\s*[：:]\s*(.+)$/);const paragraph=[answer?`<span class="answer-label">答案：</span><b>${inline(answer[1])}</b>`:inline(line)];while(i+1<lines.length&&lines[i+1].trim()&&!/^(#{1,6})\s|^\s*```|^\s*[-*+]\s|^\s*\d+[.)]\s|^>|^答案\s*[：:]/.test(lines[i+1]))paragraph.push(inline(lines[++i].trim()));out.push(answer?`<p class="answer-line">${paragraph.join('<br>')}</p>`:`<p>${paragraph.join('<br>')}</p>`);
+    }
+    closeCode();closeList();return out.join('');
+  };
+    const setStage=s=>{const n=stages[s];if(n===undefined)return;items.forEach((el,i)=>{el.classList.remove('error');el.classList.toggle('done',i<=n);el.classList.toggle('current',i===n);if(i===n)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current')})};
+    const setFailed=()=>items.forEach((el,i)=>{el.classList.remove('current');el.classList.toggle('done',i===0);el.classList.toggle('error',i===1);el.removeAttribute('aria-current')});
+  let currentCaptureId=null,currentTaskId=null,currentText='',currentGroup=null,currentGroupIndex=0;
+    let snapshotEpoch=0;
+    const showCapture=c=>{if(!c)return;currentCaptureId=c.id;img.style.display='block';meta.style.display='flex';img.src=`/api/v1/captures/${encodeURIComponent(c.id)}/image?v=${encodeURIComponent(c.received_at)}`;meta.innerHTML=`<span>${esc(c.device_id)}</span><i></i><span>${c.width} × ${c.height}</span>${currentGroup?`<span class="analysis-kind">题目组 · ${currentGroup.captures.length} 页</span>`:'<span class="analysis-kind">单题</span>'}`};
+    const updateGroupControls=()=>{const active=!!currentGroup&&currentGroup.captures.length>1;groupSwitchers.forEach(el=>el.hidden=!active);if(!active)return;groupLabels.forEach(el=>el.textContent=`第 ${currentGroupIndex+1} / ${currentGroup.captures.length} 页`);groupPrev.forEach(el=>el.disabled=currentGroupIndex===0);groupNext.forEach(el=>el.disabled=currentGroupIndex===currentGroup.captures.length-1)};
+    const showGroupPage=()=>{if(!currentGroup?.captures?.length)return;showCapture(currentGroup.captures[currentGroupIndex]);updateGroupControls()};
+    const clearGroupView=()=>{currentCaptureId=null;currentTaskId=null;currentText='';currentGroup=null;currentGroupIndex=0;updateGroupControls();items.forEach(el=>{el.classList.remove('done','current','error');el.removeAttribute('aria-current')});img.style.display='none';meta.style.display='none';md.innerHTML='<h1>题目组已取消</h1><p>当前题目组已清空，等待下一次截图。</p>'};
+    groupPrev.forEach(button=>button.addEventListener('click',()=>{if(currentGroupIndex>0){currentGroupIndex--;showGroupPage()}}));groupNext.forEach(button=>button.addEventListener('click',()=>{if(currentGroup&&currentGroupIndex<currentGroup.captures.length-1){currentGroupIndex++;showGroupPage()}}));
+    const showSnapshot=snapshot=>{currentGroup=snapshot.group||null;currentGroupIndex=currentGroup?Math.max(0,currentGroup.captures.findIndex(c=>c.id===snapshot.capture.id)):0;if(currentGroupIndex<0)currentGroupIndex=currentGroup.captures.length-1;if(currentGroup)showGroupPage();else{updateGroupControls();showCapture(snapshot.capture)}};
+    const showTask=task=>{currentTaskId=task?.id||null;currentText=task?.answer||'';if(currentText)md.innerHTML=render(currentText);if(!task&&currentGroup){setStage('upload');md.innerHTML=`<h1>题目组已收集</h1><p>已上传 ${currentGroup.captures.length} 张截图，等待 Option+Z（Windows 为 Alt+Z）提交题目组。</p>`;return}const state=task?.status;if(state==='completed')setStage('complete');else if(state==='cancelled'){setFailed();md.innerHTML='<h1>解析已停止</h1><p>该任务已被新截图取代。</p>'}else if(state==='failed'||state==='timed_out'){setFailed();md.innerHTML=`<h1>解析失败</h1><p>${esc(task.answer||'解析任务未完成，请稍后重试。')}</p>`}else if(state==='parsing'){setStage('parsing');if(!currentText)md.innerHTML='<h1>题目解析结果</h1><p>正在识别最新截图并生成解析…</p>'}else{setStage('upload');md.innerHTML='<h1>题目解析结果</h1><p>截图已上传，正在等待解析…</p>'}};
+    async function refreshLatest(){const epoch=snapshotEpoch,r=await fetch('/api/v1/latest/analysis',{cache:'no-store'}).catch(()=>null);if(epoch!==snapshotEpoch)return;if(!r?.ok){currentCaptureId=null;currentTaskId=null;currentText='';currentGroup=null;updateGroupControls();items.forEach(el=>{el.classList.remove('done','current','error');el.removeAttribute('aria-current')});img.style.display='none';meta.style.display='none';md.innerHTML='<h1>暂无截图</h1><p>等待 Capture 上传第一张截图。</p>';return}const snapshot=await r.json();if(epoch!==snapshotEpoch)return;showSnapshot(snapshot);showTask(snapshot.task)}
+  refreshLatest();
+  const updateStatus=d=>{const online=!!d?.connected;connection.classList.toggle('online',online);connectionText.textContent=online?`Capture 已连接 · 重连 ${d.reconnect_count||0} 次 · 心跳 ${d.heartbeat_count||0} 次`:'Capture 未连接 · 等待心跳';};
+    let ws=null,reconnectTimer=null;
+    const eventMatches=m=>(!m.capture_id||m.capture_id===currentCaptureId)&&(!m.task_id||m.task_id===currentTaskId);
+    const connectWs=()=>{
+      ws=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/api/v1/ws`);
+      ws.onopen=()=>{connectionText.textContent='Capture 未连接 · 等待心跳';refreshLatest()};
+      ws.onclose=()=>{connection.classList.remove('online');connectionText.textContent='Server 实时通道已断开 · 正在重连';if(!reconnectTimer)reconnectTimer=setTimeout(()=>{reconnectTimer=null;connectWs()},3000)};
+      ws.onerror=()=>ws.close();
+      ws.onmessage=async e=>{try{
+        const m=JSON.parse(e.data);
+        if(m.type==='capture_group_cancelled'){snapshotEpoch++;clearGroupView();return}
+        if(m.type==='capture_group_submitted'){snapshotEpoch++;await refreshLatest();return}
+        if(m.type==='capture_created'){
+          if(m.stage==='group_appended'){snapshotEpoch++;await refreshLatest();return}
+          snapshotEpoch++;currentGroup=null;currentGroupIndex=0;updateGroupControls();currentCaptureId=m.capture_id;currentTaskId=m.task_id||null;currentText='';setStage('upload');md.innerHTML='<h1>题目解析结果</h1><p>截图已上传，正在等待解析…</p>';
+          const expected=m.capture_id,c=await fetch('/api/v1/captures/'+encodeURIComponent(expected),{cache:'no-store'}).then(r=>r.ok?r.json():null);
+          if(c&&currentCaptureId===expected)showCapture(c);
+        }else if(m.type==='analysis_delta'&&eventMatches(m)){
+          currentText+=m.delta||'';md.innerHTML=render(currentText);setStage('parsing');
+        }else if(m.type==='analysis_completed'&&eventMatches(m)){
+          currentText=m.answer||currentText;md.innerHTML=render(currentText);setStage('complete');
+        }else if(m.type==='capture_stage'&&eventMatches(m)){
+          if(m.stage==='cancelled'){setFailed();md.innerHTML='<h1>解析已停止</h1><p>该任务已被新截图取代。</p>'}else if(m.stage==='failed'||m.stage==='timed_out'){setFailed();md.innerHTML=`<h1>解析失败</h1><p>${esc(m.error||'解析任务未完成，请重试。')}</p>`}else setStage(m.stage);
+        }else if(m.type==='device_status'&&m.device)updateStatus(m.device);
+      }catch(_){}};
+    };
+    connectWs();
+    const poll=async()=>{try{const d=await fetch('/api/v1/devices',{cache:'no-store'}).then(r=>r.json());updateStatus(d.find(x=>x.connected)||d[0]||null)}catch(_){connection.classList.remove('online');connectionText.textContent='Server 不可达'}};poll();setInterval(poll,10000);setInterval(()=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'viewer_ping'}))},10000);
+})();
+</script>
+<style>
+.md-pane{padding:8px 14px 12px;overflow:auto}.markdown{font-size:14px;line-height:1.3;max-width:none}.markdown h1{font-size:19px;line-height:1.15;margin:0 0 4px}.markdown h2{font-size:16px;line-height:1.2;margin:7px 0 3px}.markdown h3{font-size:14px;margin:5px 0 2px}.markdown p{margin:0 0 3px}.markdown br{display:block;content:"";height:2px}.markdown blockquote{margin:3px 0 5px;padding:5px 8px}.markdown ol,.markdown ul{margin:2px 0 4px 18px}.markdown li{margin:0}.answer{margin:3px 0 5px;padding:5px 8px}.markdown pre{margin:4px 0 0;padding:6px 8px}.markdown code{font-size:12px;line-height:1.25}.markdown .code-block{padding:23px 8px 7px}.markdown .code-block code{font-size:12px;line-height:1.35}.markdown th,.markdown td{padding:5px 6px;font-size:12px}
+.connection{color:#dc3b4b}.connection .signal{background:#dc3b4b;box-shadow:0 0 0 3px rgba(220,59,75,.12)}.connection.online{color:#15966d}.connection.online .signal{background:#15966d;box-shadow:0 0 0 3px rgba(21,150,109,.14)}
+.markdown .answer-line{display:inline-block;color:inherit;font-weight:inherit}.markdown .answer-line b{font-weight:900;color:#c5222b}
+</style>
+</html>

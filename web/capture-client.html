@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sight Relay — Interactive UI Prototype</title>
+<style>
+  :root{
+    --bg-outer-1:#173252;
+    --bg-outer-2:#0d1d31;
+    --bg-outer-3:#08131f;
+
+    --window-top:#102235;
+    --window-bottom:#091522;
+    --titlebar-top:#1a2c40;
+    --titlebar-bottom:#152537;
+
+    --surface-1:#1b2d44;
+    --surface-2:#132131;
+    --surface-3:#0f1c2b;
+    --surface-hover:#203650;
+    --surface-pressed:#17293e;
+
+    --border:rgba(91,127,164,.45);
+    --border-soft:rgba(93,126,160,.28);
+    --border-hover:rgba(117,160,204,.66);
+    --border-focus:rgba(83,146,255,.92);
+
+    --text-1:#f6f8fc;
+    --text-2:#cad5e4;
+    --text-3:#8fa2b9;
+    --text-4:#667a93;
+
+    --blue:#3f83ff;
+    --blue-2:#1f67f2;
+    --blue-soft:#203e66;
+    --green:#19c98e;
+    --green-2:#0da66f;
+    --yellow:#ffbd36;
+    --red:#ff6673;
+    --cyan:#55d7ff;
+
+    --radius-window:24px;
+    --radius-card:16px;
+    --radius-control:11px;
+
+    --ease:cubic-bezier(.2,.8,.2,1);
+    --ease-spring:cubic-bezier(.16,1,.3,1);
+
+    --shadow-window:0 34px 90px rgba(0,0,0,.52),0 2px 12px rgba(0,0,0,.3);
+    --shadow-card:inset 0 1px rgba(255,255,255,.025),0 1px 1px rgba(0,0,0,.18);
+  }
+
+  *{box-sizing:border-box}
+  html::-webkit-scrollbar{width:10px}
+  html::-webkit-scrollbar-track{background:#091522}
+  html::-webkit-scrollbar-thumb{background:#355678;border-radius:8px;border:2px solid #091522}
+  html::-webkit-scrollbar-thumb:hover{background:#4d78a3}
+  html{width:100%;min-height:100%;margin:0;overflow-x:hidden;overflow-y:scroll}
+  body{width:100%;min-height:100%;height:auto;margin:0;overflow-x:hidden;overflow-y:visible}
+  body{
+    color:var(--text-1);
+    background:
+      radial-gradient(circle at 49% 35%,rgba(53,106,181,.22) 0,rgba(24,58,99,.08) 31%,transparent 58%),
+      radial-gradient(circle at 4% 84%,rgba(54,110,191,.25) 0,transparent 30%),
+      linear-gradient(150deg,var(--bg-outer-1),var(--bg-outer-2) 49%,var(--bg-outer-3));
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    user-select:none;
+  }
+
+  button,input{font:inherit}
+  button{color:inherit}
+  button:focus-visible,.field:focus-within,.custom-select:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(63,131,255,.17);
+  }
+
+  #viewport{width:100%;min-height:100vh;height:auto}
+
+  .app{width:100%;min-height:100vh;height:auto;overflow:visible;background:linear-gradient(180deg,var(--window-top),var(--window-bottom));}
+
+  .app::after{content:none}
+
+  .titlebar{display:none}
+
+  .titlebar-name{color:#b9cae2;font-size:18px;font-weight:650}
+
+  .content{min-height:100vh;height:auto;padding:22px 28px 12px;overflow:visible}
+  .header{height:133px;display:flex;align-items:center;justify-content:space-between}
+  .brand-wrap{display:flex;align-items:center;gap:24px}
+  .logo{
+    width:85px;height:85px;border-radius:23px;display:grid;place-items:center;
+    background:
+      radial-gradient(circle at 75% 22%,rgba(88,226,255,.92),transparent 25%),
+      linear-gradient(145deg,#6587ff,#2f65ff 47%,#0754ea);
+    box-shadow:0 12px 25px rgba(0,74,255,.28),inset 0 1px rgba(255,255,255,.28);
+  }
+  .logo svg{width:48px;height:48px;stroke:#fff;stroke-width:4;fill:none;stroke-linecap:round}
+  .brand h1{margin:0;font-size:37px;line-height:1.05;letter-spacing:-.8px;font-weight:760}
+  .brand p{margin:10px 0 0;color:var(--text-3);font-size:18px;font-weight:500}
+
+  .update-banner{
+    display:flex;align-items:center;gap:14px;margin:0 0 15px;padding:12px 16px;
+    border:1px solid rgba(83,146,255,.55);border-radius:14px;
+    background:linear-gradient(135deg,rgba(39,83,151,.38),rgba(22,42,70,.82));
+    box-shadow:0 8px 22px rgba(0,0,0,.16)
+  }
+  .update-banner[hidden]{display:none}
+  .update-banner-icon{
+    width:34px;height:34px;flex:0 0 auto;border-radius:10px;display:grid;place-items:center;
+    background:rgba(83,146,255,.2);color:#9ec4ff;font-size:22px;font-weight:700
+  }
+  .update-banner-copy{min-width:0;flex:1}
+  .update-banner-copy strong{display:block;color:#f6f8fc;font-size:15px}
+  .update-banner-copy p{margin:4px 0 0;color:#c8d7ec;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .update-banner-copy small{display:block;margin-top:4px;color:#8fa2b9;font-size:11px}
+  .update-banner-action{
+    min-height:36px;padding:0 14px;border:1px solid rgba(132,175,255,.7);border-radius:9px;
+    background:#3f83ff;color:#fff;font-size:13px;font-weight:700;cursor:pointer;
+    transition:background-color .15s,transform .15s
+  }
+  .update-banner-action:hover{background:#5d95ff}
+  .update-banner-action:active{transform:scale(.96)}
+
+  .chips{display:flex;align-items:center;gap:14px}
+  .chip{
+    height:66px;min-width:146px;padding:0 18px;border:1px solid var(--border-soft);
+    border-radius:15px;background:linear-gradient(180deg,rgba(25,44,67,.88),rgba(17,31,48,.88));
+    display:flex;align-items:center;gap:13px;transition:border-color .2s var(--ease),background .2s var(--ease);
+  }
+  .chip:hover{border-color:rgba(104,145,186,.48)}
+  .chip .iconBubble{
+    width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+    background:#203653;color:#dce8f9;flex:0 0 auto;
+  }
+  .chip.ok .iconBubble{background:rgba(11,122,90,.18);color:#19d59c}
+  .heartbeat-chip.offline .iconBubble{background:rgba(255,102,115,.14);color:#ff6673}
+  .heartbeat-chip.offline strong{color:#ff8a93}
+  .chip.offline .iconBubble{background:transparent;width:22px}
+  .chip svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .chip-text strong{display:block;font-size:16px;line-height:1.05;font-weight:700;white-space:nowrap}
+  .chip-text span{display:block;margin-top:8px;font-size:12px;color:var(--text-3);white-space:nowrap}
+  .chip.offline{min-width:164px}
+  .chip.offline strong{color:#ff8a93}
+  .dot{width:20px;height:20px;border-radius:50%;background:var(--red);box-shadow:0 0 18px rgba(255,89,101,.48)}
+  .dot.green{background:var(--green);box-shadow:0 0 18px rgba(25,201,142,.34)}
+  .pulse{animation:pulse 1.8s infinite}
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,102,115,.25),0 0 18px rgba(255,89,101,.35)}
+    50%{box-shadow:0 0 0 8px rgba(255,102,115,0),0 0 24px rgba(255,89,101,.45)}
+  }
+
+  .card{
+    border:1px solid var(--border);
+    border-radius:16px;background:linear-gradient(135deg,var(--surface-1),var(--surface-2));
+    box-shadow:var(--shadow-card);
+  }
+
+  .status{
+    height:166px;position:relative;display:flex;align-items:center;padding:0 28px;overflow:hidden;
+    transition:border-color .22s var(--ease),background .22s var(--ease);
+  }
+  .status::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 42% 18%,rgba(39,98,181,.20),transparent 42%),linear-gradient(160deg,rgba(35,73,119,.18),transparent 55%);
+  }
+  .status-left{position:relative;display:flex;align-items:center}
+  .pause-orb{
+    width:90px;height:90px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+    border:1px solid rgba(255,190,47,.92);
+    background:radial-gradient(circle at 40% 35%,rgba(255,194,58,.35),rgba(63,50,15,.32) 62%,rgba(20,30,42,.1));
+    box-shadow:0 0 23px rgba(255,184,30,.14),inset 0 0 20px rgba(255,188,40,.12);
+    transition:.3s var(--ease-spring);
+  }
+  .pause-orb.running{
+    border-color:rgba(25,201,142,.9);
+    background:radial-gradient(circle at 40% 35%,rgba(25,201,142,.35),rgba(11,84,64,.28) 62%,rgba(20,30,42,.1));
+    box-shadow:0 0 26px rgba(25,201,142,.15),inset 0 0 20px rgba(25,201,142,.12);
+  }
+  .pause-core{
+    width:54px;height:54px;border-radius:50%;background:linear-gradient(180deg,#ffc950,#ffb62c);
+    display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 7px 15px rgba(0,0,0,.20);
+    transition:.3s var(--ease-spring);
+  }
+  .pause-orb.running .pause-core{background:linear-gradient(180deg,#27dba1,#12b97f)}
+  .pause-core b{display:block;width:7px;height:24px;border-radius:3px;background:#18304b;transition:.2s var(--ease)}
+  .pause-orb.running .pause-core b:first-child{
+    width:0;height:0;background:transparent;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:17px solid #123b30;border-radius:0;margin-left:4px;
+  }
+  .pause-orb.running .pause-core b:last-child{display:none}
+
+  .status-copy{margin-left:42px}
+  .eyebrow{font-size:16px;color:#9bacc1;font-weight:560;margin-bottom:5px}
+  .status-copy h2{margin:0;font-size:39px;line-height:1.05;font-weight:780;letter-spacing:-.8px;transition:color .22s var(--ease)}
+  .status-copy p{margin:13px 0 0;color:#99acc3;font-size:16px}
+  .status-sep{position:absolute;right:310px;top:22px;width:1px;height:116px;background:rgba(142,167,197,.39)}
+  .status-right{position:absolute;right:35px;top:0;height:100%;width:246px;display:flex;align-items:center;justify-content:flex-start;gap:20px}
+  .status-right .dot{width:18px;height:18px}
+  .status-right>div{min-width:0;flex:1}
+  .status-right strong{display:block;font-size:20px;font-weight:720;white-space:nowrap}
+  .status-right p{margin:11px 0 0;color:#9baac0;font-size:14px;line-height:1.55;white-space:nowrap}
+
+  .middle{height:auto;min-height:303px;margin-top:15px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;position:relative;z-index:1}
+  .panel{padding:20px 23px}
+  .section-head{display:flex;align-items:center;gap:15px;margin-bottom:18px}
+  .section-icon{
+    width:48px;height:48px;border-radius:15px;display:grid;place-items:center;flex:0 0 auto;color:#eff6ff;
+    background:linear-gradient(145deg,#274d7d,#1b3658);box-shadow:inset 0 1px rgba(255,255,255,.04);
+  }
+  .section-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  .section-head h3{margin:0;font-size:23px;line-height:1.05;font-weight:750}
+  .section-head p{margin:6px 0 0;color:#8da0b8;font-size:14px}
+
+  .label{font-size:15px;color:#d5deeb;font-weight:650;margin-bottom:8px}
+  .field{
+    height:49px;border-radius:11px;border:1px solid var(--border);background:linear-gradient(180deg,#0f1d2d,#0c1927);
+    display:flex;align-items:center;color:#f4f7fb;overflow:hidden;
+    transition:border-color .16s var(--ease),box-shadow .16s var(--ease),background .16s var(--ease),transform .16s var(--ease);
+  }
+  .field:hover{border-color:var(--border-hover);background:linear-gradient(180deg,#112235,#0d1c2c)}
+  .field:focus-within{border-color:var(--border-focus);background:linear-gradient(180deg,#11243a,#0e1d2d)}
+  .field .field-icon{
+    width:57px;height:100%;display:grid;place-items:center;background:linear-gradient(180deg,#182b42,#13243a);
+    color:#d7e5f7;border-right:1px solid rgba(92,128,163,.17);transition:background .16s var(--ease),color .16s var(--ease);
+  }
+  .field:focus-within .field-icon{background:linear-gradient(180deg,#1d3e68,#173456);color:#fff}
+  .field svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .field input{
+    width:100%;height:100%;padding:0 14px;border:0;outline:0;background:transparent;color:#f5f7fb;
+    font:500 17px -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;user-select:text;
+  }
+  .field input::placeholder{color:#64778f}
+  .paste-token{height:32px;margin-right:8px;padding:0 10px;border:1px solid rgba(112,151,191,.35);border-radius:8px;background:#18314d;color:#dbeaff;cursor:pointer;flex:0 0 auto}.paste-token:hover{background:#214569}.paste-token:active{transform:scale(.96)}
+  .form-gap{height:20px}
+  .capture-name{margin-top:-2px}
+
+  .controls-row{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:23px;margin-top:22px;align-items:end}
+  .control-group{position:relative}
+  .control-group:not(:last-child)::after{content:"";position:absolute;right:-12px;bottom:-7px;width:1px;height:84px;background:rgba(105,135,165,.36)}
+  .small-field{height:49px}
+  .small-field .field-icon{width:54px}
+  .select-value{font-size:16px;padding-left:13px;flex:1}
+  .chev{margin-right:13px;width:9px;height:9px;border-right:2px solid #a9bdd6;border-bottom:2px solid #a9bdd6;transform:rotate(45deg) translateY(-2px);transition:transform .18s var(--ease)}
+  .custom-select.open .chev{transform:rotate(225deg) translate(-2px,-2px)}
+
+  .custom-select{position:relative;cursor:pointer}
+  .select-menu{
+    position:absolute;z-index:40;left:0;right:0;top:57px;padding:6px;border:1px solid rgba(86,127,168,.52);border-radius:12px;
+    background:rgba(12,26,41,.98);box-shadow:0 14px 32px rgba(0,0,0,.34);opacity:0;transform:translateY(-6px) scale(.985);
+    pointer-events:none;transition:opacity .16s var(--ease),transform .16s var(--ease);backdrop-filter:blur(16px);
+  }
+  .custom-select.open .select-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+  .select-option{
+    height:38px;border-radius:8px;display:flex;align-items:center;padding:0 12px;color:#bccbda;font-size:14px;
+    transition:background .12s var(--ease),color .12s var(--ease);
+  }
+  .select-option:hover{background:#1d3653;color:#fff}
+  .select-option.selected{background:rgba(63,131,255,.17);color:#8fb9ff}
+
+  .step-value{font-size:16px;padding-left:13px;flex:1}
+  .steppers{display:grid;gap:2px;margin-right:7px}
+  .step-btn{
+    width:28px;height:20px;border:0;border-radius:5px;background:transparent;position:relative;cursor:pointer;
+    transition:background .12s var(--ease),transform .12s var(--ease);
+  }
+  .step-btn:hover{background:#243d5a}
+  .step-btn:active{transform:scale(.88);background:#2b4a6e}
+  .step-btn::before{content:"";position:absolute;left:10px;top:8px;width:7px;height:7px;border-left:1.6px solid #b5c6db;border-top:1.6px solid #b5c6db;transform:rotate(45deg)}
+  .step-btn.down::before{top:4px;transform:rotate(225deg)}
+
+  .switchline{height:49px;display:flex;align-items:center;gap:13px}
+  .switch{
+    width:63px;height:34px;border-radius:18px;padding:3px;background:#3d5677;border:1px solid rgba(141,165,192,.35);
+    display:flex;align-items:center;cursor:pointer;transition:background .22s var(--ease),border-color .22s var(--ease),box-shadow .22s var(--ease);
+  }
+  .switch:hover{border-color:rgba(158,186,218,.55)}
+  .switch span{
+    width:27px;height:27px;border-radius:50%;background:#f3f5f8;box-shadow:0 2px 5px rgba(0,0,0,.28);
+    transform:translateX(0);transition:transform .24s var(--ease-spring),background .2s var(--ease);
+  }
+  .switch.on{background:linear-gradient(180deg,#25c991,#11a875);border-color:rgba(41,221,158,.62);box-shadow:0 0 0 3px rgba(24,201,143,.08)}
+  .switch.on span{transform:translateX(29px);background:#fff}
+  .switch-status{font-size:16px;font-weight:650;transition:color .2s var(--ease)}
+  .switch.on + .switch-status{color:#74e5bd}
+  .hint{font-size:12px;color:#74869d;margin-top:1px;white-space:nowrap}
+  .manual-only{opacity:.58;cursor:not-allowed!important;filter:saturate(.55)}
+  .manual-only:hover{border-color:var(--border)!important;background:linear-gradient(180deg,#0f1d2d,#0c1927)!important}
+  .trigger-config-link{margin-top:2px;padding:0;border:0;background:transparent;color:#79aaff;font:650 12px inherit;cursor:pointer;text-align:left}
+  .trigger-config-link:hover{color:#a9c8ff}.trigger-config-link:focus-visible{outline:2px solid #69a2ff;outline-offset:3px;border-radius:4px}
+  .trigger-settings{display:grid;gap:12px}
+  .trigger-row{min-height:66px;padding:11px 14px;border:1px solid rgba(91,132,173,.34);border-radius:13px;background:rgba(10,24,39,.52);display:flex;align-items:center;gap:14px}
+  .trigger-row.disabled{opacity:.52}
+  .trigger-copy{min-width:0;flex:1}.trigger-copy strong{display:block;font-size:15px}.trigger-copy span{display:block;margin-top:5px;color:#8498b0;font-size:12px;line-height:1.4}
+  .trigger-key{display:flex;align-items:center;gap:6px;color:#a8bad0;font-size:12px;white-space:nowrap}.trigger-key kbd{height:27px;min-width:27px}
+  .trigger-bind{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:12px}
+  .binding-state{min-height:74px;padding:12px 14px;border:1px solid rgba(91,132,173,.34);border-radius:13px;background:#0d1d2e;display:flex;align-items:center;gap:12px}
+  .binding-state.recording{border-color:rgba(75,139,255,.72);box-shadow:0 0 0 3px rgba(64,125,232,.09)}
+  .binding-orb{width:38px;height:38px;border-radius:12px;background:#1c3552;color:#94baff;display:grid;place-items:center;flex:0 0 auto}
+  .binding-orb svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .binding-copy{min-width:0}.binding-copy strong{display:block;font-size:14px}.binding-copy span{display:block;margin-top:5px;color:#8296ad;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trigger-select{width:100%;height:42px;padding:0 34px 0 12px;border:1px solid rgba(98,135,170,.4);border-radius:10px;background:#13283f;color:#e7eef8;font:600 13px inherit;appearance:none;cursor:pointer}
+  .trigger-select:focus-visible{outline:2px solid #69a2ff;outline-offset:2px}
+  .trigger-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:2px}
+  .trigger-actions .mini-btn{min-height:42px}.trigger-actions .mini-btn:disabled{opacity:.45;cursor:not-allowed}
+  .switch:focus-visible{outline:2px solid #69a2ff;outline-offset:3px}
+
+  .region{
+    height:197px;margin-top:15px;padding:20px 23px;display:grid;grid-template-columns:1fr 273px;column-gap:32px;
+  }
+  .region-left .section-head{margin-bottom:10px}
+  .region-info{
+    margin-left:80px;height:84px;border:1px solid rgba(70,116,160,.54);border-radius:13px;background:linear-gradient(180deg,rgba(16,34,55,.83),rgba(14,29,46,.76));
+    padding:17px 22px;display:flex;gap:19px;
+  }
+  .info-badge{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#5aa6ff;color:#0b2039;font-size:15px;font-weight:850;flex:0 0 auto;margin-top:1px}
+  .region-info p{margin:0;color:#a9b9cc;font-size:14px;line-height:1.55}
+  .region-info p+p{margin-top:4px}
+  .region-action{
+    align-self:center;height:96px;border-radius:14px;border:1px solid rgba(70,139,255,.86);
+    background:linear-gradient(145deg,#264e85,#17427e);display:flex;align-items:center;padding:0 24px;gap:17px;cursor:pointer;
+    box-shadow:inset 0 1px rgba(255,255,255,.045),0 8px 22px rgba(12,61,135,.12);
+    transition:transform .18s var(--ease),border-color .18s var(--ease),filter .18s var(--ease),box-shadow .18s var(--ease);
+  }
+  .region-action:hover{transform:translateY(-2px);border-color:#6fa7ff;filter:brightness(1.06);box-shadow:inset 0 1px rgba(255,255,255,.06),0 11px 26px rgba(12,61,135,.2)}
+  .region-action:active{transform:translateY(0) scale(.985)}
+  .target-icon{width:42px;height:42px;position:relative;flex:0 0 auto}
+  .target-icon::before,.target-icon::after{content:"";position:absolute}
+  .target-icon::before{width:27px;height:27px;border:3px solid #fff;border-radius:50%;left:6px;top:6px}
+  .target-icon::after{left:19px;top:0;width:3px;height:42px;background:linear-gradient(#fff 0 8px,transparent 8px 34px,#fff 34px)}
+  .target-h{position:absolute;left:0;top:19px;width:42px;height:3px;background:linear-gradient(90deg,#fff 0 8px,transparent 8px 34px,#fff 34px)}
+  .region-action strong{font-size:18px;white-space:nowrap}
+  .region-action span{display:block;font-size:12px;color:#9cb8dc;margin-top:8px}
+  .region-action .arrow{margin-left:auto;font-size:29px;color:#dbe9ff;font-weight:300}
+
+  .actions{height:70px;margin-top:15px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .action{
+    appearance:none;border:1px solid rgba(90,125,164,.49);border-radius:14px;outline:0;
+    background:linear-gradient(145deg,#1e3654,#162941);color:#f1f5fb;font:700 18px inherit;
+    display:flex;align-items:center;justify-content:center;gap:19px;cursor:pointer;
+    box-shadow:inset 0 1px rgba(255,255,255,.04);
+    transition:transform .16s var(--ease),border-color .16s var(--ease),filter .16s var(--ease),box-shadow .16s var(--ease);
+  }
+  .action:hover{transform:translateY(-2px);border-color:rgba(126,169,216,.75);filter:brightness(1.08);box-shadow:inset 0 1px rgba(255,255,255,.055),0 9px 20px rgba(0,0,0,.16)}
+  .action:active{transform:translateY(0) scale(.985);filter:brightness(.96)}
+  .action svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .action.primary{
+    border-color:rgba(24,226,157,.80);background:linear-gradient(150deg,#14bd84,#0a9768);
+    box-shadow:inset 0 1px rgba(255,255,255,.13),0 0 22px rgba(10,191,127,.10)
+  }
+  .action.primary:hover{border-color:#47efb5;box-shadow:inset 0 1px rgba(255,255,255,.15),0 12px 26px rgba(7,118,81,.23)}
+  .action.primary.stop{border-color:rgba(255,109,120,.68);background:linear-gradient(150deg,#bd4e5b,#8f3541)}
+  .action.primary svg{fill:#fff;stroke:none;width:26px;height:26px}
+
+  .footer{height:44px;display:flex;align-items:center;justify-content:space-between;gap:18px;color:#6e8199;font-size:14px}
+  .shortcut{display:flex;align-items:center;gap:14px;min-width:0}
+  .shortcut strong{font-weight:500;white-space:nowrap}
+  .shortcut-list{display:flex;align-items:center;gap:14px;min-width:0}
+  .shortcut-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .shortcut-item+.shortcut-item{position:relative;padding-left:14px}
+  .shortcut-item+.shortcut-item::before{content:"";position:absolute;left:0;width:1px;height:16px;background:rgba(101,129,162,.25)}
+  .shortcut-keys{display:flex;align-items:center;gap:4px}
+  .shortcut-item span:last-child{color:#8295ad}
+  kbd{
+    height:31px;min-width:31px;padding:0 8px;border-radius:8px;border:1px solid rgba(101,129,162,.42);
+    background:linear-gradient(#1c2d44,#14233a);display:inline-grid;place-items:center;color:#d1dce9;
+    box-shadow:inset 0 1px rgba(255,255,255,.035);font:650 14px inherit;
+  }
+  .footer-tag{font-size:14px}
+
+  /* Toast */
+  .toast-stack{position:absolute;right:28px;bottom:25px;z-index:120;display:grid;gap:10px;pointer-events:none}
+  .toast{
+    width:330px;min-height:58px;padding:13px 15px;border-radius:13px;border:1px solid rgba(91,132,173,.5);
+    background:rgba(12,27,43,.96);box-shadow:0 16px 38px rgba(0,0,0,.35);
+    display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(10px) scale(.98);
+    animation:toastIn .28s var(--ease-spring) forwards;backdrop-filter:blur(16px);
+  }
+  .toast.out{animation:toastOut .22s var(--ease) forwards}
+  @keyframes toastIn{to{opacity:1;transform:none}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(8px) scale(.98)}}
+  .toast-icon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(63,131,255,.15);color:#77a8ff;font-weight:800}
+  .toast.success .toast-icon{background:rgba(25,201,142,.14);color:#56deb1}
+  .toast.warn .toast-icon{background:rgba(255,189,54,.14);color:#ffd272}
+  .toast strong{display:block;font-size:14px}
+  .toast p{margin:4px 0 0;color:#8fa2b9;font-size:12px}
+
+  /* Modal */
+  .modal-layer{
+    position:absolute;inset:0;z-index:90;background:rgba(4,10,18,.56);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
+  }
+  .modal-layer.open{opacity:1;pointer-events:auto}
+  .modal{
+    width:760px;border:1px solid rgba(98,140,184,.52);border-radius:20px;background:linear-gradient(180deg,#172b42,#0e1c2b);
+    box-shadow:0 32px 80px rgba(0,0,0,.52);transform:translateY(12px) scale(.985);opacity:0;
+    transition:transform .25s var(--ease-spring),opacity .2s var(--ease);
+  }
+  .modal-layer.open .modal{transform:none;opacity:1}
+  .modal-head{height:72px;padding:0 23px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(98,135,170,.22)}
+  .modal-head h3{margin:0;font-size:21px}
+  .modal-head p{margin:5px 0 0;color:#8297af;font-size:12px}
+  .modal-close{
+    width:35px;height:35px;border-radius:10px;border:1px solid rgba(98,135,170,.27);background:#16283c;color:#9eb2ca;cursor:pointer;
+    transition:.15s var(--ease)
+  }
+  .modal-close:hover{background:#213952;color:#fff;border-color:rgba(132,170,206,.52)}
+  .modal-body{padding:22px}
+  .modal-foot{height:72px;padding:0 22px;display:flex;align-items:center;justify-content:flex-end;gap:12px;border-top:1px solid rgba(98,135,170,.22)}
+  .mini-btn{
+    height:40px;padding:0 18px;border-radius:10px;border:1px solid rgba(98,135,170,.36);background:#182d44;color:#d9e3ef;cursor:pointer;
+    transition:.15s var(--ease)
+  }
+  .mini-btn:hover{background:#213b58;border-color:rgba(122,163,204,.6)}
+  .mini-btn:active{transform:scale(.97)}
+  .mini-btn.primary{background:#2768d9;border-color:#4385f3;color:#fff}
+  .mini-btn.primary:hover{background:#3175ea}
+
+  /* Crop editor */
+  .screen-editor{
+    position:relative;height:380px;border-radius:14px;overflow:hidden;border:1px solid rgba(91,133,173,.38);
+    background:
+      linear-gradient(120deg,rgba(47,84,129,.52),rgba(15,30,47,.72)),
+      repeating-linear-gradient(90deg,transparent 0 79px,rgba(255,255,255,.025) 80px),
+      repeating-linear-gradient(0deg,transparent 0 59px,rgba(255,255,255,.025) 60px);
+  }
+  .screen-editor::before{
+    content:"屏幕预览";position:absolute;left:18px;top:15px;color:#6f849c;font-size:12px;letter-spacing:.2px
+  }
+  .crop-box{
+    position:absolute;left:14.1%;top:9.1%;width:71.2%;height:84.8%;
+    border:2px solid #61a4ff;border-radius:6px;background:rgba(50,119,225,.08);
+    box-shadow:0 0 0 9999px rgba(2,7,13,.56),0 0 22px rgba(53,136,255,.25);
+    cursor:move;touch-action:none;
+  }
+  .crop-box::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 33%,rgba(255,255,255,.1) 33.2%,transparent 33.4%,transparent 66%,rgba(255,255,255,.1) 66.2%,transparent 66.4%),linear-gradient(0deg,transparent 33%,rgba(255,255,255,.1) 33.2%,transparent 33.4%,transparent 66%,rgba(255,255,255,.1) 66.2%,transparent 66.4%);pointer-events:none}
+  .handle{position:absolute;width:12px;height:12px;border-radius:3px;background:#d9ebff;border:2px solid #3d8dff;box-shadow:0 2px 6px rgba(0,0,0,.32)}
+  .handle.nw{left:-7px;top:-7px;cursor:nwse-resize}.handle.ne{right:-7px;top:-7px;cursor:nesw-resize}.handle.sw{left:-7px;bottom:-7px;cursor:nesw-resize}.handle.se{right:-7px;bottom:-7px;cursor:nwse-resize}
+  .crop-readout{margin-top:14px;padding:12px 14px;border-radius:10px;background:#102239;border:1px solid rgba(79,125,171,.34);color:#9fb0c5;font-size:13px}
+
+  /* Preview modal */
+  .preview{
+    height:380px;border-radius:14px;overflow:hidden;border:1px solid rgba(91,133,173,.38);position:relative;
+    background:
+      radial-gradient(circle at 72% 32%,rgba(53,135,255,.45),transparent 18%),
+      linear-gradient(135deg,#26476b,#111e2f 52%,#0c1623);
+  }
+  .preview::before{
+    content:"";position:absolute;left:28px;top:28px;font-size:28px;font-weight:760;color:rgba(255,255,255,.9)
+  }
+  .preview::after{
+    content:"Sight Relay · 1448 × 1086";position:absolute;left:30px;top:70px;color:#90a6bf;font-size:13px
+  }
+  .preview-card{position:absolute;right:36px;bottom:34px;width:250px;height:145px;border:1px solid rgba(121,168,214,.42);border-radius:15px;background:rgba(18,39,61,.72);box-shadow:0 18px 30px rgba(0,0,0,.2)}
+  .preview-lines{position:absolute;left:35px;bottom:38px;width:280px}
+  .preview-lines i{display:block;height:9px;border-radius:5px;background:rgba(183,211,239,.23);margin-top:12px}
+  .preview-lines i:nth-child(2){width:82%}.preview-lines i:nth-child(3){width:64%}
+
+  /* Loading spinner */
+  .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.24);border-top-color:#fff;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Compact desktop layout: keep the complete control surface visible on laptop screens. */
+  @media (max-height: 900px), (max-width: 1250px){
+    .content{padding:12px 22px 10px}
+    .header{height:94px}
+    .logo{width:64px;height:64px;border-radius:18px}
+    .logo svg{width:36px;height:36px}
+    .brand-wrap{gap:16px}
+    .brand h1{font-size:30px}
+    .brand p{font-size:15px;margin-top:6px}
+    .update-banner{margin-bottom:10px;padding:9px 12px;gap:10px}
+    .update-banner-action{min-height:32px;padding:0 11px;font-size:12px}
+    .chips{gap:8px}
+    .chip{height:52px;min-width:118px;padding:0 12px;gap:8px;border-radius:12px}
+    .chip.offline{min-width:132px}
+    .chip .iconBubble{width:31px;height:31px;border-radius:9px}
+    .chip-text strong{font-size:13px}
+    .chip-text span{font-size:11px;margin-top:4px}
+    .status{height:118px;padding:0 20px}
+    .pause-orb{width:70px;height:70px}
+    .pause-core{width:44px;height:44px}
+    .pause-core b{height:20px}
+    .status-copy{margin-left:24px}
+    .status-copy h2{font-size:30px}
+    .status-copy p{font-size:13px;margin-top:8px}
+    .status-right{right:24px;width:240px;gap:14px}
+    .middle{height:auto;min-height:238px;margin-bottom:14px;gap:10px}
+    .panel{padding:16px 18px}
+    .section-head{gap:10px;margin-bottom:12px}
+    .section-icon{width:38px;height:38px;border-radius:12px}
+    .section-icon svg{width:21px;height:21px}
+    .section-head h3{font-size:19px}
+    .section-head p{font-size:12px;margin-top:4px}
+    .label{font-size:13px;margin-bottom:6px}
+    .field,.small-field{height:42px}
+    .field .field-icon{width:46px}
+    .field input,.select-value,.step-value{font-size:14px}
+    .form-gap{height:12px}
+    .region{height:150px;margin-top:10px;padding:14px 16px;grid-template-columns:1fr 220px;column-gap:14px}
+    .region-info{margin-left:58px;height:68px;padding:11px 14px}
+    .region-info p{font-size:12px}
+    .region-action{height:64px;padding:0 14px;gap:8px}
+    .region-action strong{font-size:15px}
+    .region-action span{font-size:11px;margin-top:4px}
+    .actions{height:54px;margin-top:10px;gap:8px}
+    .action{font-size:15px}
+    .footer{height:30px;font-size:11px;gap:10px}
+    .shortcut,.shortcut-list{gap:8px}
+    .shortcut-item{gap:4px}
+    .shortcut-item+.shortcut-item{padding-left:8px}
+    .footer-tag{display:none}
+    kbd{height:25px;min-width:25px;font-size:12px}
+  }
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <main class="app" id="app">
+    <div class="titlebar"><div class="titlebar-name">Sight Relay Capture</div></div>
+
+    <div class="content">
+      <section class="header">
+        <div class="brand-wrap">
+          <div class="logo">
+            <svg viewBox="0 0 48 48"><path d="M6 19V7h12M30 7h12v12M42 29v12H30M18 41H6V29"/></svg>
+          </div>
+          <div class="brand"><h1>Sight Relay</h1><p>屏幕采集控制台</p></div>
+        </div>
+
+        <div class="chips">
+          <div class="chip" id="reconnectChip">
+            <div class="iconBubble">
+              <svg viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M5.6 9A7 7 0 0 1 17 5.7L20 11"/><path d="M18.4 15A7 7 0 0 1 7 18.3L4 13"/></svg>
+            </div>
+            <div class="chip-text"><strong id="reconnectTitle">连接检查中</strong><span id="reconnectSub">正在检查服务器</span></div>
+          </div>
+
+          <div class="chip ok heartbeat-chip" id="heartbeatChip">
+            <div class="iconBubble">
+              <svg viewBox="0 0 24 24"><path d="M20.8 4.6c-1.7-1.8-4.6-1.8-6.4-.1L12 6.8 9.6 4.5c-1.8-1.7-4.7-1.7-6.4.1-1.7 1.8-1.6 4.7.2 6.4L12 19.4l8.6-8.4c1.8-1.7 1.9-4.6.2-6.4Z"/><path d="m8.5 12 2.1 2.1 4.8-5"/></svg>
+            </div>
+              <div class="chip-text"><strong id="heartbeatTitle">心跳 等待</strong><span id="heartbeatSub">等待连接服务器</span></div>
+          </div>
+
+          <div class="chip">
+            <div class="iconBubble">
+              <svg viewBox="0 0 24 24"><path d="M7 5v14M12 5v14M17 5v14"/></svg>
+            </div>
+            <div class="chip-text"><strong id="captureChipTitle">状态读取中</strong><span id="captureChipSub">正在读取采集状态</span></div>
+          </div>
+
+          <div class="chip offline" id="connectionChip">
+            <div class="iconBubble"><span class="dot pulse" id="connectionDot"></span></div>
+            <div class="chip-text"><strong id="connectionTitle">未连接</strong><span id="connectionSub">等待连接服务器</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="update-banner" id="updateBanner" hidden>
+        <div class="update-banner-icon">↗</div>
+        <div class="update-banner-copy">
+          <strong>发现新版本 <span id="updateVersion"></span></strong>
+          <p id="updateNotes">请打开发布页查看更新说明。</p>
+          <small id="updateCurrent"></small>
+        </div>
+        <button class="update-banner-action" id="updateOpen" type="button">下载更新</button>
+      </div>
+
+      <section class="status card">
+        <div class="status-left">
+          <div class="pause-orb" id="stateOrb"><div class="pause-core"><b></b><b></b></div></div>
+          <div class="status-copy">
+            <div class="eyebrow">当前状态</div>
+            <h2 id="mainState">已暂停</h2>
+            <p id="mainStateSub">管理员已关闭自动采集功能，建议通过快捷键手动采集</p>
+          </div>
+        </div>
+        <div class="status-sep"></div>
+        <div class="status-right">
+          <span class="dot pulse" id="statusDot"></span>
+          <div>
+            <strong id="statusConnTitle">未连接</strong>
+            <p id="statusConnSub">等待连接到服务器<br/>请检查服务器地址与网络状态</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="middle">
+        <section class="panel card">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24"><path d="M10.6 13.4a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.6 1.6"/><path d="M13.4 10.6a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 1 0 5.7 5.7l1.6-1.6"/></svg>
+            </div>
+            <div><h3>连接设置</h3><p>配置服务器地址与设备认证信息</p></div>
+          </div>
+
+          <div class="label">Server 地址</div>
+          <div class="field">
+            <div class="field-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.4 3 14.6 0 18M12 3c-3 3.4-3 14.6 0 18"/></svg>
+            </div>
+            <input id="serverInput" value="https://ot.sunyibud.online" spellcheck="false" />
+          </div>
+
+          <div class="form-gap"></div>
+
+          <div class="label">设备 Token</div>
+          <div class="field">
+            <div class="field-icon">
+              <svg viewBox="0 0 24 24"><circle cx="15" cy="8" r="4"/><path d="m12 11-8 8v2h3l2-2h2v-2h2l2-2"/></svg>
+            </div>
+            <input id="tokenInput" placeholder="请输入设备 Token" spellcheck="false" autocomplete="off" />
+            <button type="button" id="pasteToken" class="paste-token" aria-label="粘贴设备 Token">粘贴</button>
+          </div>
+        </section>
+
+        <section class="panel card">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2 14 5l3.5-.3.8 3.4 3 1.8-1.8 3 1.8 3-3 1.8-.8 3.4L14 19l-2 3-2-3-3.5.3-.8-3.4-3-1.8 1.8-3-1.8-3 3-1.8.8-3.4L10 5l2-3Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <div><h3>采集设置</h3><p>设置设备标识与采集参数</p></div>
+          </div>
+
+          <div class="capture-name">
+            <div class="label">设备名称</div>
+            <div class="field">
+              <div class="field-icon">
+                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="1"/><path d="M9 20h6M12 16v4"/></svg>
+              </div>
+              <input id="deviceInput" value="mac-m5" spellcheck="false" />
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <div class="control-group">
+              <div class="label">显示器</div>
+              <div class="custom-select field small-field" id="displaySelect" tabindex="0">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="1"/><path d="M9 20h6M12 16v4"/></svg>
+                </div>
+                <div class="select-value" id="displayValue">1</div><div class="chev"></div>
+                <div class="select-menu">
+                  <div class="select-option selected" data-value="1">显示器 1 · 主屏幕</div>
+                  <div class="select-option" data-value="2">显示器 2 · 扩展屏</div>
+                  <div class="select-option" data-value="3">显示器 3 · 虚拟屏</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="label">间隔（秒）</div>
+              <div class="field small-field">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </div>
+                <div class="step-value" id="intervalValue">5</div>
+                <div class="steppers">
+                  <button class="step-btn manual-only" id="stepUp" aria-label="增加"></button>
+                  <button class="step-btn down manual-only" id="stepDown" aria-label="减少"></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="label">快捷触发</div>
+              <div class="switchline">
+                <div class="switch" id="quickCaptureSwitch" role="switch" aria-label="快捷截图总开关" aria-checked="true" tabindex="0"><span></span></div>
+                <div class="switch-status" id="quickCaptureStatus">已开启</div>
+              </div>
+              <button type="button" class="trigger-config-link" id="openTriggerSettings">配置键盘与鼠标触发</button>
+              <div class="hint" id="captureShortcutHint">⌥ A 已启用</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="region card">
+        <div class="region-left">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+            </div>
+            <div><h3>截图范围</h3><p>在实际屏幕上拖动四角或边缘缩放，拖动框内移动。</p></div>
+          </div>
+
+          <div class="region-info">
+            <div class="info-badge">i</div>
+            <div>
+              <p>按住 Enter 保存 · Esc 取消 · 编辑期间暂停采集</p>
+              <p id="rangeSummary">当前范围：左 14.1% · 上 9.1% · 宽 71.2% · 高 84.8%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="region-action" id="cropOpen" tabindex="0">
+          <div class="target-icon"><div class="target-h"></div></div>
+          <div><strong>设置捕获范围</strong><span>拖动选择屏幕区域</span></div>
+          <div class="arrow">›</div>
+        </div>
+      </section>
+
+      <section class="actions">
+        <button class="action" id="testConnection">
+          <svg viewBox="0 0 24 24"><path d="M10.6 13.4a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.6 1.6"/><path d="M13.4 10.6a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 1 0 5.7 5.7l1.6-1.6"/></svg>
+          <span>测试连接</span>
+        </button>
+        <button class="action" id="testScreenshot">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>
+          <span>测试截图</span>
+        </button>
+        <button class="action primary" id="toggleCapture">
+          <svg viewBox="0 0 24 24"><path d="M12 2 14 5l3.5-.3.8 3.4 3 1.8-1.8 3 1.8 3-3 1.8-.8 3.4L14 19l-2 3-2-3-3.5.3-.8-3.4-3-1.8 1.8-3-1.8-3 3-1.8.8-3.4L10 5l2-3Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>快捷触发设置</span>
+        </button>
+        <button class="action" id="saveConfig">
+          <svg viewBox="0 0 24 24"><path d="M5 3h12l2 2v16H5Z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg>
+          <span>保存配置</span>
+        </button>
+      </section>
+
+      <footer class="footer">
+        <div class="shortcut" id="captureShortcutKeys">
+          <strong>快捷键</strong>
+          <div class="shortcut-list">
+            <span class="shortcut-item" data-shortcut-key="A"><span class="shortcut-keys"><kbd data-shortcut-modifier>⌥</kbd><kbd>A</kbd></span><span>单题立即解析</span></span>
+            <span class="shortcut-item" data-shortcut-key="S"><span class="shortcut-keys"><kbd data-shortcut-modifier>⌥</kbd><kbd>S</kbd></span><span>加入题目组</span></span>
+            <span class="shortcut-item" data-shortcut-key="Z"><span class="shortcut-keys"><kbd data-shortcut-modifier>⌥</kbd><kbd>Z</kbd></span><span>提交题目组</span></span>
+            <span class="shortcut-item" data-shortcut-key="X"><span class="shortcut-keys"><kbd data-shortcut-modifier>⌥</kbd><kbd>X</kbd></span><span>清空题目组</span></span>
+          </div>
+        </div>
+        <div class="footer-tag">Sight Relay&nbsp;&nbsp;·&nbsp;&nbsp;让屏幕数据触手可及</div>
+      </footer>
+    </div>
+
+    <div class="toast-stack" id="toastStack"></div>
+
+    <div class="modal-layer" id="triggerModal" role="dialog" aria-modal="true" aria-labelledby="triggerModalTitle">
+      <div class="modal" style="width:640px">
+        <div class="modal-head">
+          <div><h3 id="triggerModalTitle">快捷截图触发</h3><p>保留 Option+A，也可以录入当前鼠标实际产生的按键。</p></div>
+          <button class="modal-close" data-close="triggerModal" aria-label="关闭快捷触发设置">✕</button>
+        </div>
+        <div class="modal-body trigger-settings">
+          <div class="trigger-row">
+            <div class="trigger-copy"><strong>快捷截图总开关</strong><span>关闭后键盘和鼠标全局触发均不响应，测试截图仍可使用。</span></div>
+            <div class="switch" id="quickCaptureModalSwitch" role="switch" aria-label="快捷截图总开关" aria-checked="true" tabindex="0"><span></span></div>
+          </div>
+          <div class="trigger-row" id="keyboardTriggerRow">
+            <div class="trigger-copy"><strong>键盘触发</strong><span>使用系统级快捷键截图并上传。</span></div>
+            <div class="trigger-key"><kbd>⌥</kbd><kbd>A</kbd></div>
+            <div class="switch" id="keyboardTriggerSwitch" role="switch" aria-label="键盘触发" aria-checked="true" tabindex="0"><span></span></div>
+          </div>
+          <div class="trigger-row" id="mouseTriggerRow">
+            <div class="trigger-copy"><strong>鼠标触发</strong><span id="mouseTriggerHelp">录入侧键、中键或其他鼠标按键。</span></div>
+            <div class="switch" id="mouseTriggerSwitch" role="switch" aria-label="鼠标触发" aria-checked="false" tabindex="0"><span></span></div>
+          </div>
+          <div class="trigger-bind" id="mouseTriggerConfiguration">
+            <div class="binding-state" id="mouseBindingState">
+              <div class="binding-orb"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v6a6 6 0 0 0 12 0V9a6 6 0 0 0-6-6Z"/><path d="M12 3v7M6 10h12"/></svg></div>
+              <div class="binding-copy"><strong id="mouseBindingTitle">尚未绑定鼠标按键</strong><span id="mouseBindingSub">点击“录入按键”，然后按下希望使用的鼠标键。</span></div>
+            </div>
+            <div><div class="label">触发方式</div><select class="trigger-select" id="mouseTriggerAction" aria-label="鼠标触发方式"><option value="single">单击</option><option value="double">双击</option><option value="long_press">长按</option></select></div>
+          </div>
+          <div class="trigger-actions" id="mouseTriggerActions">
+            <button class="mini-btn primary" id="recordMouseButton">录入鼠标按键</button>
+            <button class="mini-btn" id="testMouseTrigger">测试触发</button>
+            <button class="mini-btn" id="clearMouseBinding">清除绑定</button>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="mini-btn" data-close="triggerModal">取消</button>
+          <button class="mini-btn primary" id="saveTriggerSettings">保存并应用</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crop modal -->
+    <div class="modal-layer" id="cropModal">
+      <div class="modal">
+        <div class="modal-head">
+          <div><h3>设置捕获范围</h3><p>拖动选区移动，拖动四角调整大小。Enter 保存，Esc 取消。</p></div>
+          <button class="modal-close" data-close="cropModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="screen-editor" id="screenEditor">
+            <div class="crop-box" id="cropBox">
+              <span class="handle nw" data-handle="nw"></span>
+              <span class="handle ne" data-handle="ne"></span>
+              <span class="handle sw" data-handle="sw"></span>
+              <span class="handle se" data-handle="se"></span>
+            </div>
+          </div>
+          <div class="crop-readout" id="cropReadout">左 14.1% · 上 9.1% · 宽 71.2% · 高 84.8%</div>
+        </div>
+        <div class="modal-foot">
+          <button class="mini-btn" id="cropReset">恢复默认</button>
+          <button class="mini-btn" data-close="cropModal">取消</button>
+          <button class="mini-btn primary" id="cropSave">保存范围</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview modal -->
+    <div class="modal-layer" id="previewModal">
+      <div class="modal">
+        <div class="modal-head">
+          <div><h3>测试截图预览</h3><p>用于验证截图范围与采集链路。</p></div>
+          <button class="modal-close" data-close="previewModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="preview">
+            <div class="preview-card"></div>
+            <div class="preview-lines"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="mini-btn" data-close="previewModal">关闭</button>
+          <button class="mini-btn primary" id="retakeShot">重新截图</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const platform = window.__PLATFORM__ || {capture_key:'Option',capture_shortcut:'Option+A',mouse_trigger_supported:true};
+  const initialConfig = window.__INITIAL_CONFIG__ || null;
+
+  function setCaptureShortcutLabels(){
+    const key = platform.capture_key || 'Option';
+    const keyLabel=key==='Option'?'⌥':key;
+    $$('#captureShortcutKeys [data-shortcut-modifier]').forEach(el=>{el.textContent=keyLabel});
+    const modalKeys=$('#triggerModal .trigger-key');
+    if(modalKeys) modalKeys.innerHTML=`<kbd>${keyLabel}</kbd><kbd>A</kbd>`;
+    if(platform.mouse_trigger_supported===false){
+      ['mouseTriggerRow','mouseTriggerConfiguration','mouseTriggerActions'].forEach(id=>{const el=$('#'+id);if(el)el.hidden=true});
+      const subtitle=$('#triggerModalTitle')?.nextElementSibling;if(subtitle)subtitle.textContent='配置系统级键盘截图快捷键。';
+      const link=$('#openTriggerSettings');if(link)link.textContent='配置键盘触发';
+    }
+  }
+
+  function setDisplayOptions(displays, selectedId){
+    if(!Array.isArray(displays) || !displays.length) return;
+    const menu = $('#displaySelect .select-menu');
+    if(!menu) return;
+    menu.replaceChildren();
+    displays.forEach(([id, name, width, height], index) => {
+      const option = document.createElement('div');
+      option.className = 'select-option';
+      option.dataset.value = String(id);
+      option.textContent = `${name || `显示器 ${index + 1}`} · ${width} × ${height}`;
+      if(String(id) === String(selectedId)) option.classList.add('selected');
+      menu.appendChild(option);
+    });
+    const selected = menu.querySelector('.selected') || menu.firstElementChild;
+    if(selected) $('#displayValue').textContent = selected.dataset.value;
+  }
+
+  setCaptureShortcutLabels();
+  function nativeCommand(type, payload={}){
+    try { window.ipc?.postMessage(JSON.stringify({type, ...payload})); } catch (_) {}
+  }
+
+  window.__updateCheckResult = result => {
+    if(!result || result.status!=='available') return;
+    const banner=$('#updateBanner');
+    if(!banner) return;
+    $('#updateVersion').textContent=`v${result.latest_version}`;
+    $('#updateCurrent').textContent=`当前版本 v${result.current_version}`;
+    $('#updateNotes').textContent=result.notes || '请打开发布页查看更新说明。';
+    banner.hidden=false;
+  };
+  $('#updateOpen')?.addEventListener('click',()=>nativeCommand('open_release_page'));
+
+  function insertTokenText(text){
+    const input=$('#tokenInput');
+    input.value=String(text).trim();
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.focus();
+  }
+  let quickCaptureEnabled=true,keyboardTriggerEnabled=true,mouseTriggerEnabled=false,mouseButton=null,mouseTriggerAction='single';
+  let savedTriggerState=null;
+  function persistCurrentConfig(){nativeCommand('save_config',{server:$('#serverInput').value.trim(),token:$('#tokenInput').value.trim(),device:$('#deviceInput').value.trim(),display:$('#displayValue').textContent,interval,auto:false,quick_capture_enabled:quickCaptureEnabled,keyboard_trigger_enabled:keyboardTriggerEnabled,mouse_trigger_enabled:mouseTriggerEnabled,mouse_button:mouseButton,mouse_trigger_action:mouseTriggerAction});}
+  window.__applyTokenPaste=text=>{insertTokenText(text);persistCurrentConfig();uiToast('success','Token 已保存','设备 Token 已覆盖并自动保存。');probeServer();};
+  window.__tokenPasteFailed=()=>uiToast('warn','无法读取剪贴板','系统剪贴板当前没有可粘贴的文本。');
+  function pasteTokenFromClipboard(){nativeCommand('paste_token')}
+  $('#pasteToken').addEventListener('click',pasteTokenFromClipboard);
+  $('#tokenInput').addEventListener('paste',e=>{
+    const text=e.clipboardData?.getData('text/plain');
+    if(!text)return;
+    e.preventDefault();
+    const input=e.currentTarget;
+    input.value=String(text).trim();
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    persistCurrentConfig();
+  });
+  $('#tokenInput').addEventListener('keydown',e=>{
+    if(!(e.metaKey||e.ctrlKey))return;
+    if(e.key.toLowerCase()==='a'){e.preventDefault();e.currentTarget.select();}
+    if(e.key.toLowerCase()==='v'){e.preventDefault();pasteTokenFromClipboard();}
+  });
+
+  function fitPrototype(){}
+
+  function uiToast(type,title,message){
+    const stack=$('#toastStack');
+    const el=document.createElement('div');
+    el.className=`toast ${type||'info'}`;
+    const symbol=type==='success'?'✓':type==='warn'?'!':'i';
+    el.innerHTML=`<div class="toast-icon">${symbol}</div><div><strong>${title}</strong><p>${message}</p></div>`;
+    stack.appendChild(el);
+    setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),240)},2700);
+  }
+
+  // Custom select
+  const displaySelect=$('#displaySelect');
+  displaySelect.addEventListener('click',e=>{
+    const opt=e.target.closest('.select-option');
+    if(opt){
+      $$('.select-option').forEach(x=>x.classList.remove('selected'));
+      opt.classList.add('selected');
+      $('#displayValue').textContent=opt.dataset.value;
+      displaySelect.classList.remove('open');
+      uiToast('info','显示器已切换',opt.textContent.trim());
+      e.stopPropagation(); return;
+    }
+    displaySelect.classList.toggle('open');
+  });
+  displaySelect.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();displaySelect.classList.toggle('open')}
+    if(e.key==='Escape')displaySelect.classList.remove('open');
+  });
+  document.addEventListener('click',e=>{if(!displaySelect.contains(e.target))displaySelect.classList.remove('open')});
+
+  // Interval stepper
+  let interval=5;
+  function updateInterval(delta){
+    interval=Math.min(60,Math.max(1,interval+delta));
+    $('#intervalValue').textContent=interval;
+  }
+  const automaticDisabledNotice=()=>uiToast('warn','自动采集不可用','管理员已关闭自动采集功能，建议通过快捷键手动采集');
+  $('#stepUp').addEventListener('click',e=>{e.stopPropagation();automaticDisabledNotice()});
+  $('#stepDown').addEventListener('click',e=>{e.stopPropagation();automaticDisabledNotice()});
+
+  // Quick capture switches + capture state
+  let auto=false, running=false, connected=false;
+  function renderSwitch(element,on,disabled=false){
+    if(!element)return;
+    element.classList.toggle('on',on);
+    element.setAttribute('aria-checked',String(on));
+    element.setAttribute('aria-disabled',String(disabled));
+    element.tabIndex=disabled?-1:0;
+  }
+  function mouseButtonLabel(button){
+    if(button===0)return '鼠标左键';
+    if(button===1)return '鼠标右键';
+    if(button===2)return '鼠标中键';
+    return `鼠标侧键 ${Number(button)+1}`;
+  }
+  function renderTriggers(){
+    if(platform.mouse_trigger_supported===false){mouseTriggerEnabled=false;mouseButton=null}
+    renderSwitch($('#quickCaptureSwitch'),quickCaptureEnabled);
+    renderSwitch($('#quickCaptureModalSwitch'),quickCaptureEnabled);
+    renderSwitch($('#keyboardTriggerSwitch'),keyboardTriggerEnabled,!quickCaptureEnabled);
+    renderSwitch($('#mouseTriggerSwitch'),mouseTriggerEnabled,!quickCaptureEnabled);
+    $('#keyboardTriggerRow').classList.toggle('disabled',!quickCaptureEnabled);
+    $('#mouseTriggerRow').classList.toggle('disabled',!quickCaptureEnabled);
+    $('#quickCaptureStatus').textContent=quickCaptureEnabled?'已开启':'已关闭';
+    const shortcut=platform.capture_shortcut||`${platform.capture_key||'Option'}+A`;
+    $('#captureShortcutHint').textContent=!quickCaptureEnabled?'键盘与鼠标触发均已关闭':keyboardTriggerEnabled?`${shortcut} 已启用`:'键盘触发已关闭';
+    $('#mouseTriggerAction').value=mouseTriggerAction;
+    const bound=Number.isInteger(mouseButton);
+    $('#mouseBindingTitle').textContent=bound?`已绑定：${mouseButtonLabel(mouseButton)}`:'尚未绑定鼠标按键';
+    $('#mouseBindingSub').textContent=bound?(mouseButton<=1?'主按键容易误触，建议使用双击。':'设置保存后，全局监听该逻辑按键。'):'点击“录入鼠标按键”，然后按下希望使用的鼠标键。';
+    $('#testMouseTrigger').disabled=!quickCaptureEnabled||!mouseTriggerEnabled||!bound;
+    $('#clearMouseBinding').disabled=!bound;
+    renderRunning();
+  }
+  function bindSwitch(element,toggle){
+    element.addEventListener('click',toggle);
+    element.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}});
+  }
+  const toggleQuick=()=>{quickCaptureEnabled=!quickCaptureEnabled;renderTriggers()};
+  bindSwitch($('#quickCaptureSwitch'),()=>{toggleQuick();persistCurrentConfig();savedTriggerState={quickCaptureEnabled,keyboardTriggerEnabled,mouseTriggerEnabled,mouseButton,mouseTriggerAction}});
+  bindSwitch($('#quickCaptureModalSwitch'),toggleQuick);
+  bindSwitch($('#keyboardTriggerSwitch'),()=>{if(quickCaptureEnabled){keyboardTriggerEnabled=!keyboardTriggerEnabled;renderTriggers()}});
+  bindSwitch($('#mouseTriggerSwitch'),()=>{if(quickCaptureEnabled){mouseTriggerEnabled=!mouseTriggerEnabled;renderTriggers()}});
+
+  function renderRunning(){
+    running=quickCaptureEnabled;
+    $('#stateOrb').classList.toggle('running',running);
+    $('#mainState').textContent=running?'快捷采集待命':'快捷采集已关闭';
+    $('#mainState').style.color=running?'#67dfb5':'';
+    $('#mainStateSub').textContent=running?'等待键盘或鼠标触发，截图后将立即上传':'测试截图和菜单栏“立即截图”仍可使用';
+    $('#captureChipTitle').textContent=running?'快捷采集待命':'快捷采集关闭';
+    $('#captureChipSub').textContent=running?[keyboardTriggerEnabled?'键盘':'',mouseTriggerEnabled?'鼠标':''].filter(Boolean).join(' + ')||'未启用触发方式':'全局触发不响应';
+    const btn=$('#toggleCapture');
+    btn.classList.toggle('stop',!running);
+    btn.querySelector('span').textContent='快捷触发设置';
+  }
+
+  $('#toggleCapture').addEventListener('click',()=>openTriggerSettings());
+
+  function setConnected(v, latency=null){
+    connected=v;
+    const heartbeatChip=$('#heartbeatChip');
+    heartbeatChip.classList.toggle('offline',!v);
+    heartbeatChip.classList.toggle('ok',v);
+    const dots=[$('#connectionDot'),$('#statusDot')];
+    dots.forEach(d=>{d.classList.toggle('green',v);d.classList.toggle('pulse',!v)});
+    $('#statusConnTitle').textContent=v?'连接正常':'未连接';
+    $('#statusConnTitle').style.color=v?'#69e1b6':'';
+    $('#statusConnSub').innerHTML=v?`已连接到采集服务器<br/>心跳与认证状态正常${latency == null ? '' : ` · 延迟 ${latency}ms`}`:'等待连接到服务器<br/>请检查服务器地址与网络状态';
+    $('#reconnectTitle').textContent=v?'连接稳定':'连接断开';
+    $('#reconnectSub').textContent=v?(latency == null ? '连接正常' : `延迟 ${latency}ms`):'正在重连...';
+    $('#heartbeatTitle').textContent=v?'心跳 正常':'心跳 断开';
+    $('#heartbeatSub').textContent=v?'连接正常':'等待连接服务器';
+  }
+
+  function setServerReachable(v, detail){
+    const chip=$('#connectionChip');
+    chip.classList.toggle('offline',!v);
+    $('#connectionDot').classList.toggle('green',v);
+    $('#connectionDot').classList.toggle('pulse',!v);
+    $('#connectionTitle').textContent=v?'Server 可访问':'Server 不可达';
+    $('#connectionTitle').style.color=v?'#69e1b6':'#ff6f7d';
+    $('#connectionSub').textContent=detail||(v?'端口响应正常':'请检查地址、端口和网络');
+  }
+
+  async function probeServer(){
+    const server=$('#serverInput').value.trim().replace(/\/$/,'');
+    if(!server){setConnected(false);$('#connectionSub').textContent='Server 地址为空';return;}
+    try {
+      const started=performance.now();
+      const health=await fetch(`${server}/healthz`,{cache:'no-store'});
+      if(!health.ok){setServerReachable(false,`Server 返回 ${health.status}`);$('#statusConnSub').innerHTML='Server 地址可以访问，但服务状态异常<br/>请检查 Server 日志';return;}
+      setServerReachable(true,'端口响应正常');
+      const query=new URLSearchParams({device_id:$('#deviceInput').value.trim(),token:$('#tokenInput').value.trim()});
+      const r=await fetch(`${server}/api/v1/capture/status?${query}`,{cache:'no-store'});
+      const latency=Math.max(0,Math.round(performance.now()-started));
+      if(r.status===401){nativeCommand('set_connection_state',{connected:false});setConnected(false);$('#statusConnSub').innerHTML='Server 地址连接正常，但设备认证失败<br/>请检查设备名称和 Token';return;}
+      if(!r.ok){nativeCommand('set_connection_state',{connected:false});setConnected(false);$('#connectionSub').textContent=`认证接口异常 ${r.status}`;$('#statusConnSub').innerHTML='Server 可以访问，但认证接口不可用<br/>请更新或重启 Server';return;}
+      const state=await r.json();
+      nativeCommand('set_connection_state',{connected:!!state.connected});
+      setConnected(!!state.connected,state.connected?latency:null);
+      if(!state.connected){$('#connectionSub').textContent='认证成功，等待心跳';$('#statusConnSub').innerHTML='设备认证已通过<br/>Capture WebSocket 尚未建立心跳';}
+    }
+    catch(_){nativeCommand('set_connection_state',{connected:false});setConnected(false);setServerReachable(false,'请检查地址、端口和网络');$('#statusConnSub').innerHTML='无法连接到 Server 地址<br/>请检查地址、端口和网络';}
+  }
+  setInterval(probeServer,5000);
+
+  $('#testConnection').addEventListener('click',async ()=>{
+    const btn=$('#testConnection'), label=btn.querySelector('span');
+    const old=label.textContent;
+    label.textContent='正在测试';
+    const oldSvg=btn.querySelector('svg').outerHTML;
+    btn.querySelector('svg').outerHTML='<div class="spinner"></div>';
+    btn.disabled=true;
+    nativeCommand('test_connection',{server:$('#serverInput').value.trim()});
+    try {
+      const started=performance.now();
+      const server=$('#serverInput').value.trim().replace(/\/$/,'');
+      const health=await fetch(`${server}/healthz`,{cache:'no-store'});
+      if(!health.ok)throw new Error(`health:${health.status}`);
+      setServerReachable(true,'端口响应正常');
+      const query=new URLSearchParams({device_id:$('#deviceInput').value.trim(),token:$('#tokenInput').value.trim()});
+      const response = await fetch(`${server}/api/v1/capture/status?${query}`, {cache:'no-store'});
+      const latency=Math.max(0,Math.round(performance.now()-started));
+      if(response.status===401){nativeCommand('set_connection_state',{connected:false});setConnected(false);uiToast('warn','设备认证失败','Server 地址连接正常，但设备名称或 Token 不正确。');}
+      else if(!response.ok){nativeCommand('set_connection_state',{connected:false});setConnected(false);uiToast('warn','认证接口异常',`Server 已连接，但认证接口返回 ${response.status}，请更新或重启 Server。`);}
+      else {const state=await response.json();nativeCommand('set_connection_state',{connected:!!state.connected});setConnected(!!state.connected,state.connected?latency:null);uiToast(state.connected?'success':'warn',state.connected?'连接测试通过':'认证成功，等待心跳',state.connected?`Token 已认证且心跳正常，延迟 ${latency}ms。`:'Server 和 Token 均正常，但 Capture WebSocket 尚未建立心跳。');}
+    } catch (_) {
+      nativeCommand('set_connection_state',{connected:false});
+      setConnected(false);
+      setServerReachable(false,'请检查地址、端口和网络');
+      uiToast('warn','连接测试失败','无法连接到服务器，请检查地址与网络。');
+    }
+    btn.disabled=false;
+    btn.querySelector('.spinner').outerHTML=oldSvg;
+    label.textContent=old;
+  });
+
+  // Save configuration
+  $('#saveConfig').addEventListener('click',()=>{
+    persistCurrentConfig();
+    uiToast('success','配置已保存','配置已由 Rust 写入本机配置文件。');
+  });
+
+  if(initialConfig){
+    const cfg=initialConfig;
+    $('#tokenInput').value=cfg.token||'';
+    $('#intervalValue').textContent=interval=Number(cfg.interval)||5;
+    setDisplayOptions(window.__DISPLAYS__,cfg.display);
+    if(cfg.display && !Array.isArray(window.__DISPLAYS__)) $('#displayValue').textContent=String(cfg.display);
+    quickCaptureEnabled=cfg.quick_capture_enabled!==false;
+    keyboardTriggerEnabled=cfg.keyboard_trigger_enabled!==false;
+    mouseTriggerEnabled=cfg.mouse_trigger_enabled===true;
+    mouseButton=Number.isInteger(cfg.mouse_button)?cfg.mouse_button:null;
+    mouseTriggerAction=cfg.mouse_trigger_action||'single';
+    savedTriggerState={quickCaptureEnabled,keyboardTriggerEnabled,mouseTriggerEnabled,mouseButton,mouseTriggerAction};
+    renderTriggers();
+  }else{
+    savedTriggerState={quickCaptureEnabled,keyboardTriggerEnabled,mouseTriggerEnabled,mouseButton,mouseTriggerAction};
+    renderTriggers();
+  }
+  probeServer();
+
+  // Modal helpers
+  function openModal(id){$('#'+id).classList.add('open')}
+  function closeModal(id){$('#'+id).classList.remove('open')}
+  function cancelTriggerEditing(){stopBindingCountdown();nativeCommand('cancel_mouse_binding');restoreSavedTriggers()}
+  $$('[data-close]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.close==='triggerModal')cancelTriggerEditing();closeModal(b.dataset.close)}));
+  $$('.modal-layer').forEach(layer=>layer.addEventListener('mousedown',e=>{if(e.target===layer){if(layer.id==='triggerModal')cancelTriggerEditing();closeModal(layer.id)}}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#triggerModal').classList.contains('open')){cancelTriggerEditing();closeModal('triggerModal')}});
+
+  let bindingTimer=null;
+  function restoreSavedTriggers(){
+    if(!savedTriggerState)return;
+    ({quickCaptureEnabled,keyboardTriggerEnabled,mouseTriggerEnabled,mouseButton,mouseTriggerAction}=savedTriggerState);
+    renderTriggers();
+  }
+  function openTriggerSettings(){restoreSavedTriggers();openModal('triggerModal')}
+  $('#openTriggerSettings').addEventListener('click',openTriggerSettings);
+  function stopBindingCountdown(){if(bindingTimer){clearInterval(bindingTimer);bindingTimer=null}$('#mouseBindingState').classList.remove('recording')}
+  function startBindingCountdown(mode){
+    stopBindingCountdown();
+    let remaining=10;
+    $('#mouseBindingState').classList.add('recording');
+    $('#mouseBindingTitle').textContent=mode==='test'?'等待测试触发':'正在录入鼠标按键';
+    const update=()=>{$('#mouseBindingSub').textContent=mode==='test'?`请使用当前绑定动作 · ${remaining} 秒`:`请按下希望绑定的鼠标按键 · ${remaining} 秒`};
+    update();
+    bindingTimer=setInterval(()=>{remaining-=1;update();if(remaining<=0){stopBindingCountdown();renderTriggers()}},1000);
+  }
+  $('#recordMouseButton').addEventListener('click',()=>{startBindingCountdown('record');nativeCommand('start_mouse_binding')});
+  $('#testMouseTrigger').addEventListener('click',()=>{startBindingCountdown('test');nativeCommand('test_mouse_trigger',{mouse_button:mouseButton,mouse_trigger_action:mouseTriggerAction})});
+  $('#clearMouseBinding').addEventListener('click',()=>{
+    stopBindingCountdown();nativeCommand('cancel_mouse_binding');
+    mouseButton=null;mouseTriggerEnabled=false;nativeCommand('clear_mouse_binding');
+    savedTriggerState={quickCaptureEnabled,keyboardTriggerEnabled,mouseTriggerEnabled,mouseButton,mouseTriggerAction};
+    renderTriggers();uiToast('success','鼠标绑定已清除','鼠标触发已关闭。');
+  });
+  $('#mouseTriggerAction').addEventListener('change',e=>{mouseTriggerAction=e.target.value;renderTriggers()});
+  $('#saveTriggerSettings').addEventListener('click',()=>{
+    if(mouseTriggerEnabled&&!Number.isInteger(mouseButton)){uiToast('warn','尚未绑定鼠标按键','请先录入一个鼠标按键，或关闭鼠标触发。');return}
+    stopBindingCountdown();nativeCommand('cancel_mouse_binding');
+    persistCurrentConfig();savedTriggerState={quickCaptureEnabled,keyboardTriggerEnabled,mouseTriggerEnabled,mouseButton,mouseTriggerAction};
+    closeModal('triggerModal');uiToast('success','快捷触发已应用','键盘与鼠标触发设置已保存并立即生效。');
+  });
+  window.__mouseMonitorReady=()=>{};
+  window.__mouseBindingDetected=result=>{
+    stopBindingCountdown();mouseButton=Number(result.button);mouseTriggerAction=result.recommendedAction||mouseTriggerAction;mouseTriggerEnabled=true;renderTriggers();
+    uiToast('success','鼠标按键已识别',`${result.label}，请选择触发方式后保存。`);
+  };
+  window.__mouseBindingFailed=message=>{stopBindingCountdown();renderTriggers();uiToast('warn','鼠标监听不可用',message)};
+  window.__mouseBindingTimedOut=()=>{stopBindingCountdown();renderTriggers();uiToast('warn','录入已超时','未检测到鼠标按键。部分鼠标驱动可能会把侧键映射为键盘事件。')};
+  window.__mouseTriggerTested=()=>{stopBindingCountdown();renderTriggers();uiToast('success','鼠标触发已识别','已触发一次截图请求，请在 Server 主界面确认上传结果。')};
+
+  // Screenshot preview
+  function openPreview(){ nativeCommand('test_screenshot'); uiToast('info','正在截图','已请求 Rust 采集并上传当前屏幕。'); }
+  $('#testScreenshot').addEventListener('click',openPreview);
+  $('#retakeShot').addEventListener('click',openPreview);
+
+  // Crop editor
+  let crop={x:14.1,y:9.1,w:71.2,h:84.8};
+  let draft={...crop};
+  const editor=$('#screenEditor'), box=$('#cropBox');
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+
+  function renderCrop(){
+    box.style.left=draft.x+'%';box.style.top=draft.y+'%';box.style.width=draft.w+'%';box.style.height=draft.h+'%';
+    $('#cropReadout').textContent=`左 ${draft.x.toFixed(1)}% · 上 ${draft.y.toFixed(1)}% · 宽 ${draft.w.toFixed(1)}% · 高 ${draft.h.toFixed(1)}%`;
+  }
+
+  if(initialConfig?.roi){
+    crop={x:initialConfig.roi.x*100,y:initialConfig.roi.y*100,w:initialConfig.roi.width*100,h:initialConfig.roi.height*100};
+    draft={...crop};
+    renderCrop();
+    $('#rangeSummary').textContent=`当前范围：左 ${crop.x.toFixed(1)}% · 上 ${crop.y.toFixed(1)}% · 宽 ${crop.w.toFixed(1)}% · 高 ${crop.h.toFixed(1)}%`;
+  }
+
+  $('#cropOpen').addEventListener('click',()=>{
+    nativeCommand('open_roi');
+    uiToast('info','正在设置捕获范围','请直接在屏幕上的捕获边框中拖动调整，按 Enter 保存或 Esc 取消。');
+  });
+  $('#cropOpen').addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();
+      nativeCommand('open_roi');
+      uiToast('info','正在设置捕获范围','请直接在屏幕上的捕获边框中拖动调整，按 Enter 保存或 Esc 取消。');
+    }
+  });
+
+  let drag=null;
+  function pointerPct(e){
+    const r=editor.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/r.width*100,y:(e.clientY-r.top)/r.height*100};
+  }
+
+  box.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    const p=pointerPct(e);
+    const handle=e.target.dataset.handle||'move';
+    drag={handle,start:p,base:{...draft}};
+    box.setPointerCapture?.(e.pointerId);
+  });
+
+  box.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    const p=pointerPct(e), dx=p.x-drag.start.x, dy=p.y-drag.start.y, b=drag.base;
+    if(drag.handle==='move'){
+      draft.x=clamp(b.x+dx,0,100-b.w);draft.y=clamp(b.y+dy,0,100-b.h);
+    }else{
+      const min=10;
+      if(drag.handle.includes('e')) draft.w=clamp(b.w+dx,min,100-b.x);
+      if(drag.handle.includes('s')) draft.h=clamp(b.h+dy,min,100-b.y);
+      if(drag.handle.includes('w')){
+        const nx=clamp(b.x+dx,0,b.x+b.w-min);draft.w=b.w+(b.x-nx);draft.x=nx;
+      }
+      if(drag.handle.includes('n')){
+        const ny=clamp(b.y+dy,0,b.y+b.h-min);draft.h=b.h+(b.y-ny);draft.y=ny;
+      }
+    }
+    renderCrop();
+  });
+  box.addEventListener('pointerup',()=>drag=null);
+  box.addEventListener('pointercancel',()=>drag=null);
+
+  $('#cropReset').addEventListener('click',()=>{draft={x:14.1,y:9.1,w:71.2,h:84.8};renderCrop()});
+  function saveCrop(){
+    crop={...draft};
+    $('#rangeSummary').textContent=`当前范围：左 ${crop.x.toFixed(1)}% · 上 ${crop.y.toFixed(1)}% · 宽 ${crop.w.toFixed(1)}% · 高 ${crop.h.toFixed(1)}%`;
+    closeModal('cropModal');uiToast('success','捕获范围已保存','新的截图区域已应用到配置。');
+  }
+  $('#cropSave').addEventListener('click',saveCrop);
+
+  // Global keyboard shortcuts
+  document.addEventListener('keydown',e=>{
+    if($('#cropModal').classList.contains('open')){
+      if(e.key==='Escape'){closeModal('cropModal');e.preventDefault()}
+      if(e.key==='Enter'){saveCrop();e.preventDefault()}
+      return;
+    }
+    if($('#previewModal').classList.contains('open')){
+      if(e.key==='Escape'){closeModal('previewModal');e.preventDefault()}
+      return;
+    }
+  });
+
+</script>
+</body>
+</html>

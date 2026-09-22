@@ -1,0 +1,70 @@
+.capture-panel .secondary,
+.user-panel .secondary {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid #d9e4f5;
+  border-radius: 9px;
+  background: #fff;
+  color: #2457bd;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.capture-panel .secondary:hover,
+.user-panel .secondary:hover {
+  background: #f1f6ff;
+  border-color: #b9cff5;
+  box-shadow: 0 4px 12px rgba(36, 87, 189, .12);
+}
+.capture-panel .secondary:active,
+.user-panel .secondary:active,
+.capture-panel .primary:active,
+.user-panel .primary:active {
+  transform: scale(.96);
+}
+.capture-panel .primary,
+.user-panel .primary {
+  min-height: 40px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-weight: 700;
+  transition: background-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.capture-panel .primary:hover,
+.user-panel .primary:hover {
+  background: #326de8 !important;
+  box-shadow: 0 5px 14px rgba(63, 124, 255, .24);
+}
+.capture-panel .pager button,
+.user-panel .pager button {
+  min-width: 76px;
+  min-height: 38px;
+  border: 1px solid #d9e4f5;
+  border-radius: 9px;
+  background: #fff;
+  color: #2457bd;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+}
+.capture-panel .pager button:hover:not(:disabled),
+.user-panel .pager button:hover:not(:disabled) {
+  background: #f1f6ff;
+  border-color: #b9cff5;
+}
+.capture-panel button:focus-visible,
+.user-panel button:focus-visible {
+  outline: 3px solid rgba(63, 124, 255, .25);
+  outline-offset: 2px;
+}
+.capture-panel button:disabled,
+.user-panel button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+@media (max-width: 600px) {
+  .capture-panel article,
+  .user-panel article { align-items: flex-start; flex-wrap: wrap; }
+  .capture-panel article > span:last-child,
+  .user-panel article > button { width: 100%; justify-content: flex-start; }
+}

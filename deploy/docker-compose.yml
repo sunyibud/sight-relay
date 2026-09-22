@@ -1,0 +1,12 @@
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - sight-relay-data:/data
+    restart: unless-stopped
+volumes:
+  sight-relay-data:

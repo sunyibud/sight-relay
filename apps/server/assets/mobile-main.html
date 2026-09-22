@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f9ff" />
+  <title>题目解析 - 移动端原型</title>
+  <style>
+    :root{
+      --bg:#f5f9ff;
+      --panel:#ffffff;
+      --text:#07154d;
+      --muted:#7683a8;
+      --blue:#1368ff;
+      --blue-2:#1f73ff;
+      --blue-soft:#eaf2ff;
+      --line:#e5edf9;
+      --green:#10c486;
+      --green-soft:#edf9f4;
+      --shadow:0 10px 30px rgba(60,95,155,.08);
+      --radius-xl:22px;
+      --radius-lg:18px;
+      --radius-md:14px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text)}
+    body{
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",
+      "Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    button{font:inherit}
+    .app{
+      width:min(100%, 430px);
+      min-height:100vh;
+      margin:0 auto;
+      padding:20px 16px 36px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255,255,255,.98) 0%, rgba(248,251,255,.94) 36%, rgba(244,249,255,.98) 100%);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:0 0 8px;
+      min-height:26px;
+    }
+    .title{
+      display:none;
+    }
+    .icon-btn{
+      width:44px;height:44px;border:0;background:transparent;border-radius:14px;
+      display:grid;place-items:center;color:var(--text);cursor:pointer;
+      transition:.18s ease;
+    }
+    .icon-btn:hover{background:rgba(19,104,255,.07)}
+    .icon-btn:active{transform:scale(.95)}
+    .settings-link{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:25;width:44px;height:44px;border:1px solid #dce7f5;border-radius:14px;display:grid;place-items:center;color:var(--blue);background:rgba(255,255,255,.96);text-decoration:none;font-size:20px;box-shadow:0 8px 22px rgba(53,91,150,.16);transition:background .18s ease,transform .18s ease}
+    .settings-link:hover{background:rgba(19,104,255,.07)}
+    .settings-link:active{transform:scale(.95)}
+    .fullscreen-link{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:25;width:44px;height:44px;border:1px solid #dce7f5;border-radius:14px;display:grid;place-items:center;color:var(--blue);background:rgba(255,255,255,.96);box-shadow:0 8px 22px rgba(53,91,150,.16);cursor:pointer;transition:background .18s ease,transform .18s ease}.fullscreen-link:active{transform:scale(.95)}.fullscreen-link:hover{background:#f1f6ff}
+
+    .topbar-spacer{display:none}
+    .server-status{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      height:26px;
+      padding:0 9px;
+      border:1px solid #dce9f8;
+      background:rgba(255,255,255,.82);
+      border-radius:999px;
+      color:#4e5f87;
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .heartbeat{
+      width:8px;height:8px;
+      border-radius:50%;
+      background:#10c486;
+      flex:0 0 auto;
+    }
+    .server-status[data-state="connecting"] .heartbeat{
+      background:#f0a52b;
+    }
+    .server-status[data-state="offline"] .heartbeat{
+      background:#d75578;
+    }
+    35%{transform:scale(1.12)}
+      70%{box-shadow:0 0 0 7px rgba(16,196,134,0);transform:scale(1)}
+      100%{box-shadow:0 0 0 0 rgba(16,196,134,0)}
+    }
+
+    .progress{
+      display:flex;
+      align-items:center;
+      min-width:0;
+      margin:0;
+    }
+    .progress-step{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      height:26px;
+      padding:0 9px;
+      border-radius:999px;
+      background:var(--blue-soft);
+      color:#1354c9;
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .progress-step .dot{
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:#aab7ca;
+      flex:0 0 auto;
+    }
+
+    .question-card{
+      display:flex;align-items:center;gap:12px;
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(219,230,246,.95);
+      border-bottom:0;
+      border-radius:18px 18px 0 0;
+      padding:12px;
+      box-shadow:none;
+      margin-bottom:0;
+    }
+    .question-thumb{
+      width:112px;height:58px;flex:0 0 112px;
+      border-radius:11px;
+      background:linear-gradient(135deg,#f2f2f2,#fff);
+      border:1px solid #ececec;
+      padding:7px 9px;
+      color:#303030;
+      overflow:hidden;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:7.7px;
+      line-height:1.45;
+      box-shadow:inset 0 0 14px rgba(0,0,0,.025);
+    }
+    .question-thumb .q{font-family:inherit;font-weight:700;margin-bottom:3px}
+.question-thumb .opts{display:grid;grid-template-columns:1fr 1fr;gap:2px 5px}
+.group-mobile-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0;color:var(--muted);font-size:12px}.group-mobile-controls button{min-width:44px;min-height:36px;border:1px solid #cfe0f7;border-radius:10px;background:#fff;color:var(--blue);font-weight:700}.group-mobile-controls[hidden]{display:none}
+    .v-sep{width:1px;height:40px;background:var(--line);margin-left:2px}
+    .image-action{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;cursor:pointer;
+      border:0;background:transparent;padding:4px 0;color:inherit;text-align:left;
+    }
+    .image-action .pic-icon{
+      width:38px;height:38px;border-radius:12px;
+      display:grid;place-items:center;
+      color:#fff;background:linear-gradient(180deg,#2b7cff,#0f61ef);
+      box-shadow:0 8px 16px rgba(18,104,255,.2);
+      flex:0 0 auto;
+    }
+    .image-action .label{font-weight:800;font-size:16px;white-space:nowrap}
+    .image-action .hint{margin-left:auto;color:var(--muted);font-size:13px;white-space:nowrap}
+    .image-action .right-arrow{
+      width:9px;height:9px;border-right:2px solid #7582a4;border-top:2px solid #7582a4;
+      transform:rotate(45deg);margin-left:2px;
+    }
+
+    .result-card{
+      background:rgba(255,255,255,.98);
+      border:1px solid rgba(219,230,246,.95);
+      border-top:1px solid var(--line);
+      border-radius:0 0 20px 20px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      margin-top:0;
+    }
+
+
+    .md{
+      padding:16px 18px 24px;
+      font-size:15px;
+      line-height:1.75;
+      color:var(--text);
+      word-break:break-word;
+      overflow-wrap:anywhere;
+    }
+    .md > :first-child{margin-top:0}
+    .md > :last-child{margin-bottom:0}
+    .md h1,.md h2,.md h3,.md h4{
+      color:var(--text);
+      line-height:1.38;
+      letter-spacing:-.2px;
+    }
+    .md h1{font-size:24px;margin:0 0 18px;font-weight:800}
+    .md h2{font-size:19px;margin:24px 0 12px;font-weight:800}
+    .md h3{font-size:16px;margin:20px 0 10px;font-weight:800}
+    .md p{margin:10px 0}
+    .md ul,.md ol{margin:10px 0;padding-left:24px}
+    .md li{margin:6px 0;padding-left:2px}
+    .md li::marker{font-weight:700;color:#315a9e}
+    .md strong{font-weight:800}
+    .md em{font-style:italic}
+    .md a{color:var(--blue);text-decoration:none}
+    .md a:hover{text-decoration:underline}
+    .md blockquote{
+      margin:14px 0;
+      padding:10px 14px;
+      border-left:3px solid #93baff;
+      background:#f6f9ff;
+      color:#52617f;
+      border-radius:0 10px 10px 0;
+    }
+    .md code{
+      font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+      font-size:.9em;
+      background:#f1f5fb;
+      border:1px solid #e5ecf7;
+      border-radius:6px;
+      padding:2px 5px;
+      color:#17356f;
+    }
+    .md pre{
+      overflow:auto;
+      margin:14px 0;
+      padding:14px;
+      background:#0f172a;
+      border-radius:12px;
+      color:#e5edf9;
+      line-height:1.6;
+    }
+    .md pre code{
+      padding:0;
+      border:0;
+      background:transparent;
+      color:inherit;
+      font-size:12.5px;
+    }
+    .md hr{
+      border:0;
+      border-top:1px solid var(--line);
+      margin:20px 0;
+    }
+    .md table{
+      width:100%;
+      border-collapse:collapse;
+      margin:14px 0;
+      font-size:13px;
+    }
+    .md th,.md td{
+      border:1px solid #dfe8f5;
+      padding:8px 10px;
+      text-align:left;
+      vertical-align:top;
+    }
+    .md th{
+      background:#f6f9ff;
+      font-weight:800;
+    }
+    .md .answer-highlight{
+      margin:12px 0 16px;
+      padding:14px 16px;
+      border-radius:14px;
+      background:linear-gradient(90deg,#eefbf7 0%,#f5fcf9 100%);
+      border:1px solid #e3f6ee;
+    }
+    .question-collapsible{position:relative;max-height:250px;overflow:hidden;transition:max-height .2s ease}.question-collapsible.expanded{max-height:none}.question-toggle{display:block;margin:8px 0 2px;padding:8px 12px;border:1px solid #cfe0f7;border-radius:10px;background:#f5f9ff;color:var(--blue);font-size:13px;font-weight:700;cursor:pointer}.empty-question-image{width:100%;height:100%;display:grid;place-items:center;color:#8b9bb5;font-size:11px;text-align:center}.question-thumb>img{width:100%;height:100%;display:block;object-fit:contain}.large-question{display:flex;align-items:center;justify-content:center}.large-question>img{display:block;max-width:100%;max-height:64vh;object-fit:contain;border-radius:8px}
+    .toast{
+      position:fixed;left:50%;bottom:28px;z-index:40;
+      transform:translate(-50%,12px);
+      padding:10px 14px;border-radius:999px;
+      background:#07154d;color:white;font-size:13px;
+      opacity:0;pointer-events:none;transition:.22s ease;
+      box-shadow:0 10px 24px rgba(7,21,77,.18);
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    .modal{
+      position:fixed;inset:0;z-index:30;
+      background:rgba(5,15,48,.48);
+      display:none;align-items:center;justify-content:center;
+      padding:24px;
+      backdrop-filter:blur(8px);
+    }
+    .modal.open{display:flex}
+    .modal-card{
+      width:min(92vw,480px);background:white;border-radius:20px;padding:14px;
+      box-shadow:0 22px 60px rgba(5,15,48,.26);
+      position:relative;
+    }
+    .modal-close{
+      position:absolute;right:10px;top:10px;width:34px;height:34px;border:0;border-radius:50%;
+      background:rgba(7,21,77,.08);color:var(--text);font-size:20px;cursor:pointer;
+    }
+    .large-question{
+      background:#fafafa;border:1px solid #ececec;border-radius:14px;padding:20px;
+      min-height:0;max-height:68vh;overflow:auto;font-family:Georgia,"Times New Roman",serif;color:#222;
+    }
+    .large-question .stem{font-weight:700;margin-bottom:22px;font-size:18px}
+    .large-question .options{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;font-size:19px}
+
+    @media (max-width:380px){
+      .app{padding-left:12px;padding-right:12px}
+      .topbar{margin-bottom:7px}
+      .server-status,.progress-step{height:24px;padding:0 8px;font-size:10px}
+      .question-thumb{width:96px;flex-basis:96px}
+      .image-action .label{font-size:15px}
+      .image-action .hint{display:none}
+      .md{font-size:14px}
+    }
+      .server-status{padding:0 8px;font-size:11px;gap:5px}
+      .progress{gap:4px}
+      .progress-step{padding:4px 7px;font-size:10px;gap:4px}
+      .progress-step .dot{width:14px;height:14px;font-size:9px}
+      .progress-line{flex-basis:10px}
+      .question-thumb{width:96px;flex-basis:96px}
+      .image-action .label{font-size:15px}
+      .image-action .hint{display:none}
+      .md{font-size:14px}
+    }
+      .server-status{padding:0 8px;font-size:11px;gap:6px}
+      .progress{gap:5px}
+      .progress-step{padding:7px 9px;font-size:12px;gap:6px}
+      .progress-step .dot{width:20px;height:20px}
+      .progress-line{max-width:20px}
+      .question-thumb{width:96px;flex-basis:96px}
+      .image-action .label{font-size:15px}
+      .image-action .hint{display:none}
+      .md{font-size:14px}
+    }
+
+    @media (min-width:700px){
+      body{padding:28px 0}
+      .app{
+        min-height:auto;border-radius:28px;
+        box-shadow:0 22px 80px rgba(55,89,145,.12);
+        border:1px solid #edf2f9;
+      }
+    }
+  </style>
+  <style>
+    /* 移动端保持原型的紧凑卡片比例，避免题目图片撑满屏幕 */
+    .question-card{gap:8px;padding:9px 10px;border-radius:14px 14px 0 0}
+    .question-thumb{width:88px;height:48px;flex-basis:88px;padding:5px 7px;font-size:6.8px;line-height:1.3;border-radius:9px}
+    .image-action{gap:7px;padding:2px 0}.image-action .pic-icon{width:32px;height:32px;border-radius:9px}.image-action .label{font-size:14px}.image-action .right-arrow{width:8px;height:8px}
+    .result-card{border-radius:0 0 16px 16px}.md{padding:12px 14px 18px;font-size:14px;line-height:1.48}.md h1{font-size:20px;margin:0 0 10px}.md h2{font-size:17px;margin:15px 0 7px}.md h3{font-size:15px;margin:12px 0 5px}.md p{margin:5px 0}.md ul,.md ol{margin:5px 0;padding-left:20px}.md li{margin:2px 0}.md blockquote{margin:7px 0;padding:7px 10px}.md pre{margin:8px 0;padding:10px;font-size:12px}.md .answer-line{color:inherit;font-weight:inherit}.md .answer-line b{color:#c5222b;font-weight:900}
+    .modal{padding:14px}.modal-card{width:100%;max-height:78vh;padding:10px}.large-question{max-height:64vh;padding:14px}.large-question .stem{margin-bottom:14px;font-size:16px}.large-question .options{gap:10px 16px;font-size:16px}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <section class="progress" aria-label="当前解析状态">
+        <div class="progress-step" id="processStatus">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="processStatusText">等待截图</span>
+        </div>
+      </section>
+
+      <div class="server-status" id="serverStatus" data-state="connecting" title="Server 连接状态">
+        <span class="heartbeat" aria-hidden="true"></span>
+        <span id="serverStatusText">连接中</span>
+      </div>
+    </header>
+
+    <section class="question-card">
+      <div class="question-thumb" aria-label="题目缩略图">
+        <div class="empty-question-image">等待 Capture 上传截图</div>
+      </div>
+      <div class="v-sep"></div>
+      <button class="image-action" id="openImage">
+        <span class="pic-icon">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3.5" y="4" width="17" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
+            <path d="M5.5 17l4.1-4.1a1.6 1.6 0 0 1 2.2 0l2.1 2.1 1.2-1.2a1.6 1.6 0 0 1 2.2 0l1.2 1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="label">查看题目图片</span>
+        <span class="hint">点击放大</span>
+        <span class="right-arrow"></span>
+      </button>
+    </section>
+
+    <section class="result-card">
+      <article class="md" id="markdownContent" aria-live="polite"><h2>暂无截图</h2><p>等待 Capture 上传第一张截图。</p></article>
+    </section>
+  </main>
+
+  <div class="modal" id="imageModal" aria-hidden="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeModal" aria-label="关闭">×</button>
+      <div class="large-question">
+        <div class="empty-question-image" id="largeQuestionEmpty">暂无截图</div>
+        <img id="largeQuestionImage" alt="最新题目截图" hidden>
+      </div>
+      <div class="group-mobile-controls" id="groupMobileControls" hidden><button type="button" id="groupPrev">上一页</button><span id="groupPageLabel">第 1 / 1 页</span><button type="button" id="groupNext">下一页</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已复制</div>
+  <button class="fullscreen-link" id="fullscreenBtn" type="button" aria-label="全屏显示" title="全屏显示"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M20 16v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <a class="settings-link" href="/settings" aria-label="打开配置界面" title="配置" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" stroke="currentColor" stroke-width="1.7"/><path d="m19.4 13.5 1.1.8-1.8 3.1-1.3-.6a8.2 8.2 0 0 1-2.1 1.2l-.2 1.4h-3.6l-.2-1.4a8.2 8.2 0 0 1-2.1-1.2l-1.3.6-1.8-3.1 1.1-.8a7.8 7.8 0 0 1 0-2.4l-1.1-.8 1.8-3.1 1.3.6a8.2 8.2 0 0 1 2.1-1.2l.2-1.4h3.6l.2 1.4a8.2 8.2 0 0 1 2.1 1.2l1.3-.6 1.8 3.1-1.1.8a7.8 7.8 0 0 1 0 2.4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></a>
+
+  <script>
+    const toast = document.getElementById('toast');
+    let toastTimer;
+
+    function showToast(text){
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>toast.classList.remove('show'), 1600);
+    }
+    const fullscreenBtn=document.getElementById('fullscreenBtn');
+    let wakeLock=null,wakeLockWanted=false,wakeLockNoticeShown=false,wakeRetryTimer=null;
+    const isFullscreen=()=>Boolean(document.fullscreenElement||document.webkitFullscreenElement);
+    const canUseWakeLock=()=>Boolean(window.isSecureContext&&'wakeLock' in navigator);
+    const releaseWakeLock=async()=>{if(wakeRetryTimer){clearTimeout(wakeRetryTimer);wakeRetryTimer=null}if(wakeLock){try{await wakeLock.release()}catch(_){}wakeLock=null;}};
+    const scheduleWakeLockRetry=()=>{if(wakeRetryTimer||!wakeLockWanted)return;wakeRetryTimer=setTimeout(()=>{wakeRetryTimer=null;requestWakeLock()},2000)};
+    const requestWakeLock=async()=>{
+      if(!wakeLockWanted||!isFullscreen()||document.visibilityState!=='visible')return;
+      if(!canUseWakeLock()){if(!wakeLockNoticeShown){wakeLockNoticeShown=true;showToast('请使用 HTTPS 访问，当前浏览器无法保持屏幕常亮')}return}
+      if(wakeLock)return;
+      try{
+        wakeLock=await navigator.wakeLock.request('screen');
+        wakeLockNoticeShown=false;
+        wakeLock.addEventListener('release',()=>{wakeLock=null;if(wakeLockWanted&&isFullscreen()&&document.visibilityState==='visible')scheduleWakeLockRetry()},{once:true});
+      }catch(_){scheduleWakeLockRetry()}
+    };
+    fullscreenBtn.addEventListener('click',async()=>{
+      try{
+        if(isFullscreen()){
+          wakeLockWanted=false;await releaseWakeLock();
+          if(document.exitFullscreen)await document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+        }else{
+          wakeLockWanted=true;
+          if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
+          else if(document.documentElement.webkitRequestFullscreen)await document.documentElement.webkitRequestFullscreen();
+          else{wakeLockWanted=false;showToast('当前浏览器不支持网页全屏');return}
+          syncFullscreen();
+          requestWakeLock();
+        }
+      }catch(_){wakeLockWanted=false;await releaseWakeLock();showToast('当前浏览器不支持网页全屏')}
+    });
+    const syncFullscreen=()=>{const active=isFullscreen();fullscreenBtn.setAttribute('aria-label',active?'退出全屏':'全屏显示');fullscreenBtn.title=active?'退出全屏':'全屏显示';wakeLockWanted=active;if(active)requestWakeLock();else releaseWakeLock()};
+    document.addEventListener('fullscreenchange',syncFullscreen);document.addEventListener('webkitfullscreenchange',syncFullscreen);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wakeLockWanted)requestWakeLock()});
+    setInterval(()=>{if(wakeLockWanted&&isFullscreen()&&document.visibilityState==='visible'&&!wakeLock)requestWakeLock()},15000);
+const modal = document.getElementById('imageModal');
+    document.getElementById('openImage').addEventListener('click', ()=>{
+      if(!window.latestCaptureId){showToast('暂无可查看的截图');return}
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    });
+    document.getElementById('closeModal').addEventListener('click', ()=>{
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    });
+    modal.addEventListener('click', (e)=>{
+      if(e.target === modal){
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden','true');
+      }
+    });
+
+    // Server 心跳状态：
+    // 你的系统接入 WebSocket / SSE 后，只需要调用 setServerState 即可更新这里。
+    function setServerState(state){
+      const el = document.getElementById('serverStatus');
+      const text = document.getElementById('serverStatusText');
+      el.dataset.state = state;
+
+      if(state === 'online'){
+        text.textContent = '已连接';
+        el.title = 'Server 连接正常';
+      }else if(state === 'connecting'){
+        text.textContent = '连接中';
+        el.title = '正在连接 Server';
+      }else{
+        text.textContent = '已断开';
+        el.title = 'Server 连接已断开';
+      }
+    }
+
+    // 示例：真实项目中可在 WebSocket 的 onopen/onclose/onerror 中调用。
+    // socket.onopen  = () => setServerState('online');
+    // socket.onclose = () => setServerState('offline');
+    // socket.onerror = () => setServerState('offline');
+
+    function setProcessState(state){
+      const text = document.getElementById('processStatusText');
+      const dot = document.querySelector('#processStatus .dot');
+
+      if(state === 'idle'){
+        text.textContent = '等待截图';
+        dot.style.background = '#aab7ca';
+      }else if(state === 'uploaded'){
+        text.textContent = '上传成功';
+        dot.style.background = '#4c8dff';
+        }else if(state === 'completed'){
+          text.textContent = '已完成';
+          dot.style.background = '#10c486';
+        }else if(state === 'failed'){
+          text.textContent = '解析失败';
+          dot.style.background = '#dc3b4b';
+      }else{
+        text.textContent = '解析中';
+        dot.style.background = '#1368ff';
+      }
+    }
+
+    window.setProcessState = setProcessState;
+    window.setServerState = setServerState;
+  </script>
+  <script>
+  (()=>{
+    const md=document.getElementById('markdownContent'), status=document.getElementById('processStatusText'), server=document.getElementById('serverStatus'), serverText=document.getElementById('serverStatusText');
+    const setServer=(state,label)=>{server.dataset.state=state;serverText.textContent=label|| (state==='online'?'Server 已连接':state==='connecting'?'连接中':'Server 已断开');};
+    const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const inline=s=>escapeHtml(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');
+    const renderFallback=s=>{const out=[];let list=null;const close=()=>{if(list){out.push(`</${list}>`);list=null}};for(const raw of String(s??'').replace(/\r\n?/g,'\n').split('\n')){const line=raw.trim();if(!line){close();continue}let m;if((m=line.match(/^(#{1,3})\s+(.+)$/))){close();const n=m[1].length;out.push(`<h${n}>${inline(m[2])}</h${n}>`);continue}if((m=line.match(/^[-*]\s+(.+)$/))||(m=line.match(/^\d+[.)]\s+(.+)$/))){const tag=/^\d/.test(line)?'ol':'ul';if(list!==tag){close();out.push(`<${tag}>`);list=tag}out.push(`<li>${inline(m[1])}</li>`);continue}close();const answer=line.match(/^答案\s*[：:]\s*(.+)$/);out.push(answer?`<p class="answer-line">答案：<b>${inline(answer[1])}</b></p>`:`<p>${inline(line)}</p>`)}close();return out.join('')};
+    const render=s=>window.marked?.parse?marked.parse(s):renderFallback(s);
+    function compactQuestion(){const hs=[...md.querySelectorAll('h2')],q=hs.find(h=>h.textContent.trim()==='题目'),a=hs.find(h=>h.textContent.trim()==='答案和解析');if(!q||md.querySelector('.question-collapsible'))return;const box=document.createElement('div');box.className='question-collapsible';let n=q.nextSibling;while(n&&n!==a){const next=n.nextSibling;box.appendChild(n);n=next}q.after(box);if(box.scrollHeight>250){const b=document.createElement('button');b.className='question-toggle';b.type='button';b.textContent='展开题目';b.setAttribute('aria-expanded','false');b.onclick=()=>{const expanded=box.classList.toggle('expanded');b.textContent=expanded?'收起题目':'展开题目';b.setAttribute('aria-expanded',String(expanded))};box.after(b)}}
+    window.latestCaptureId=null;let currentGroup=null,currentGroupIndex=0;
+    const setLatestImage=(item,group)=>{const thumb=document.querySelector('.question-thumb'),large=document.getElementById('largeQuestionImage'),empty=document.getElementById('largeQuestionEmpty'),controls=document.getElementById('groupMobileControls');currentGroup=group||null;currentGroupIndex=currentGroup?Math.max(0,currentGroup.captures.findIndex(c=>c.id===item?.id||c.id===item?.capture_id)):0;if(currentGroupIndex<0)currentGroupIndex=currentGroup.captures.length-1;if(!item?.id&&!item?.capture_id){window.latestCaptureId=null;thumb.innerHTML='<div class="empty-question-image">等待 Capture 上传截图</div>';large.hidden=true;empty.hidden=false;controls.hidden=true;return}const current=currentGroup?.captures?.[currentGroupIndex]||item,id=encodeURIComponent(current.id||current.capture_id),cache=current.received_at?`?v=${encodeURIComponent(current.received_at)}`:'';const src='/api/v1/captures/'+id+'/image'+cache;window.latestCaptureId=current.id||current.capture_id;thumb.innerHTML='<img src="'+src+'" alt="'+(currentGroup?`题目组第 ${currentGroupIndex+1} 页`:'最新题目截图')+'">';large.src=src;large.hidden=false;empty.hidden=true;controls.hidden=!(currentGroup?.captures?.length>1);if(currentGroup?.captures?.length>1){document.getElementById('groupPageLabel').textContent=`第 ${currentGroupIndex+1} / ${currentGroup.captures.length} 页`;document.getElementById('groupPrev').disabled=currentGroupIndex===0;document.getElementById('groupNext').disabled=currentGroupIndex===currentGroup.captures.length-1;}};
+    const clearGroupView=()=>{setLatestImage(null);currentGroup=null;currentGroupIndex=0;window.latestCaptureId=null;setProcessState('idle');md.innerHTML='<h2>题目组已取消</h2><p>当前题目组已清空，等待下一次截图。</p>'};
+    document.getElementById('groupPrev').onclick=()=>{if(currentGroupIndex>0){currentGroupIndex--;setLatestImage(currentGroup.captures[currentGroupIndex],currentGroup)}};document.getElementById('groupNext').onclick=()=>{if(currentGroup&&currentGroupIndex<currentGroup.captures.length-1){currentGroupIndex++;setLatestImage(currentGroup.captures[currentGroupIndex],currentGroup)}};
+    async function refreshThumb(){try{const h=await fetch('/api/v1/history?page=1&limit=1',{cache:'no-store'}).then(r=>r.ok?r.json():null);setLatestImage(h?.items?.[0]||null)}catch(_){setLatestImage(null)} }
+      let currentCaptureId=null,currentTaskId=null,currentText='',snapshotEpoch=0;
+      const applyTask=task=>{currentTaskId=task?.id||null;currentText=task?.answer||'';if(currentText)md.innerHTML=render(currentText);if(!task&&currentGroup){setProcessState('uploaded');md.innerHTML=`<h2>题目组已收集</h2><p>已上传 ${currentGroup.captures.length} 张截图，等待 Option+Z（Windows 为 Alt+Z）提交题目组。</p>`;return}if(task?.status==='completed'){setProcessState('completed');compactQuestion()}else if(task?.status==='cancelled'){setProcessState('failed');md.innerHTML='<h2>解析已停止</h2><p>该任务已被新截图取代。</p>'}else if(task?.status==='failed'||task?.status==='timed_out'){setProcessState('failed');md.innerHTML=`<h2>解析失败</h2><p>${escapeHtml(task.answer||'解析任务未完成，请稍后重试。')}</p>`}else if(task?.status==='parsing'){setProcessState('parsing');if(!currentText)md.innerHTML='<h2>题目解析</h2><p>正在识别最新截图并生成解析…</p>'}else{setProcessState('uploaded');md.innerHTML='<h2>题目解析</h2><p>截图已上传，正在等待解析…</p>'}};
+    async function refreshLatestAnalysis(){const epoch=snapshotEpoch,r=await fetch('/api/v1/latest/analysis',{cache:'no-store'}).catch(()=>null);if(epoch!==snapshotEpoch)return;if(!r?.ok){currentCaptureId=null;currentTaskId=null;currentText='';setLatestImage(null);setProcessState('idle');md.innerHTML='<h2>暂无截图</h2><p>等待 Capture 上传截图。</p>';return}const snapshot=await r.json();if(epoch!==snapshotEpoch)return;currentCaptureId=snapshot.capture.id;setLatestImage(snapshot.capture,snapshot.group);applyTask(snapshot.task)}
+      let ws=null,reconnectTimer=null;
+      const eventMatches=m=>(!m.capture_id||m.capture_id===currentCaptureId)&&(!m.task_id||m.task_id===currentTaskId);
+      const connectWs=()=>{setServer('connecting','连接中…');ws=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/api/v1/ws`);ws.onopen=()=>{setServer('connecting','Server 已连接 · 等待 Capture 心跳');refreshLatestAnalysis()};ws.onclose=()=>{setServer('offline','Server 通道断开 · 3秒后重连');if(!reconnectTimer)reconnectTimer=setTimeout(()=>{reconnectTimer=null;connectWs()},3000)};ws.onerror=()=>{setServer('offline','Server 通道异常');ws.close()};ws.onmessage=async e=>{try{const m=JSON.parse(e.data);if(m.type==='capture_group_cancelled'){snapshotEpoch++;clearGroupView();return}if(m.type==='capture_group_submitted'){snapshotEpoch++;await refreshLatestAnalysis();return}if(m.type==='capture_created'){if(m.stage==='group_appended'){snapshotEpoch++;await refreshLatestAnalysis();return}snapshotEpoch++;currentGroup=null;currentGroupIndex=0;currentCaptureId=m.capture_id;currentTaskId=m.task_id||null;currentText='';setProcessState('uploaded');md.innerHTML='<h2>题目解析</h2><p>截图已上传，正在等待解析…</p>';const expected=m.capture_id,c=await fetch('/api/v1/captures/'+encodeURIComponent(expected),{cache:'no-store'}).then(r=>r.ok?r.json():null);if(c&&currentCaptureId===expected)setLatestImage(c)}else if(m.type==='analysis_delta'&&eventMatches(m)){currentText+=m.delta||'';md.innerHTML=render(currentText);setProcessState('parsing')}else if(m.type==='analysis_completed'&&eventMatches(m)){currentText=m.answer||currentText;md.innerHTML=render(currentText);setProcessState('completed');compactQuestion()}else if(m.type==='capture_stage'&&eventMatches(m)){if(m.stage==='cancelled'){setProcessState('failed');md.innerHTML='<h2>解析已停止</h2><p>解析任务已取消。</p>'}else if(m.stage==='failed'||m.stage==='timed_out'){setProcessState('failed');md.innerHTML=`<h2>解析失败</h2><p>${escapeHtml(m.error||'解析任务未完成，请重试。')}</p>`}else if(m.stage==='complete')setProcessState('completed');else if(m.stage==='parsing')setProcessState('parsing');else setProcessState('uploaded')}}catch(_){}}};
+      connectWs();
+      const pollCapture=async()=>{try{const devices=await fetch('/api/v1/devices',{cache:'no-store'}).then(r=>r.json());const d=devices.find(x=>x.connected)||devices[0];if(d&&d.connected)setServer('online',`Capture 已连接 · 心跳 ${d.heartbeat_count||0} 次`);else setServer('connecting','Server 已连接 · 等待 Capture 心跳')}catch(_){setServer('offline','Server 暂时不可达')}};
+      pollCapture();setInterval(pollCapture,3000);setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({type:'viewer_ping'}))},10000);refreshLatestAnalysis();
+  })();
+  </script>
+</body>
+</html>

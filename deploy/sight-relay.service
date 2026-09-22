@@ -1,0 +1,22 @@
+[Unit]
+Description=Sight Relay Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sightrelay
+Group=sightrelay
+WorkingDirectory=/var/lib/sight-relay
+EnvironmentFile=/etc/sight-relay/server.env
+ExecStart=/usr/local/bin/sight-relay-server
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/sight-relay
+
+[Install]
+WantedBy=multi-user.target
