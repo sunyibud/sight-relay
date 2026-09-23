@@ -71,7 +71,7 @@ Configuration templates:
 open dist/SightRelay.app
 ```
 
-This creates `dist/SightRelay.app` and `dist/SightRelay.dmg`. The build script copies the Cargo package version into `Info.plist`; update `crates/mac-capture/Cargo.toml` before publishing a new release.
+This creates `dist/SightRelay.app` and `dist/SightRelay.dmg`. The build script copies the Cargo package version into `Info.plist`; update `crates/capture-client/Cargo.toml` before publishing a new release.
 
 ### Windows
 

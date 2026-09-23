@@ -9,7 +9,7 @@ if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
 if (-not (Test-Path "assets\sight-relay.ico")) {
     throw "Windows 应用图标生成失败，未找到 assets\sight-relay.ico。"
 }
-cargo build --release -p mac-capture --bin settings --bin roi-overlay
+cargo build --release -p sight-relay-capture --bin settings --bin roi-overlay
 if ($LASTEXITCODE -ne 0) {
     throw "Rust 编译失败，已停止打包，不会继续复制不存在的 Capture 客户端文件。"
 }

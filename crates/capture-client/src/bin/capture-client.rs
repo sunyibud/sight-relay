@@ -1,9 +1,9 @@
-use mac_capture::{Roi, capture_display, list_displays};
+use sight_relay_capture::{Roi, capture_display, list_displays};
 use std::{env, fs, path::PathBuf, process};
 
 fn usage() {
-    eprintln!("用法:\n  mac-capture list\n  mac-capture capture <display_id> <output.jpg> [x y width height]
-  mac-capture upload <server_url> <device_id> <display_id> [x y width height]\n\n自动采集已由管理员关闭，请使用 Capture 客户端的 Option-A 快捷键手动采集。\nROI 使用 0..1 的相对坐标，默认全屏。首次运行需在系统设置中授予屏幕录制权限。");
+    eprintln!("用法:\n  capture-client list\n  capture-client capture <display_id> <output.jpg> [x y width height]
+  capture-client upload <server_url> <device_id> <display_id> [x y width height]\n\n自动采集已由管理员关闭，请使用 Capture 客户端的 Option-A 快捷键手动采集。\nROI 使用 0..1 的相对坐标，默认全屏。首次运行需在系统设置中授予屏幕录制权限。");
 }
 
 fn main() {
@@ -118,7 +118,7 @@ fn main() {
             };
             match capture_display(display_id, roi).and_then(|image| {
                 fs::write(&output, &image.bytes)
-                    .map_err(|e| mac_capture::CaptureError::Screen(e.to_string()))
+                    .map_err(|e| sight_relay_capture::CaptureError::Screen(e.to_string()))
                     .map(|_| image)
             }) {
                 Ok(image) => println!(
@@ -142,7 +142,7 @@ fn main() {
     }
 }
 
-fn fail(error: mac_capture::CaptureError) -> ! {
+fn fail(error: sight_relay_capture::CaptureError) -> ! {
     eprintln!("错误：{error}");
     process::exit(1)
 }

@@ -81,7 +81,7 @@ cargo run -p sight-relay-server --release
 open dist/SightRelay.app
 ```
 
-产物为 `dist/SightRelay.app` 和 `dist/SightRelay.dmg`。构建脚本会从 `crates/mac-capture/Cargo.toml` 读取版本并写入 macOS `Info.plist`。发布新版本时请先更新 Cargo 版本，再把 DMG 上传到 Release 页面。
+产物为 `dist/SightRelay.app` 和 `dist/SightRelay.dmg`。构建脚本会从 `crates/capture-client/Cargo.toml` 读取版本并写入 macOS `Info.plist`。发布新版本时请先更新 Cargo 版本，再把 DMG 上传到 Release 页面。
 
 ### Windows
 

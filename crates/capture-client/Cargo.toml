@@ -1,5 +1,5 @@
 [package]
-name = "mac-capture"
+name = "sight-relay-capture"
 version = "1.2.0"
 edition = "2024"
 

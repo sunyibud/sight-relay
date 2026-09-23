@@ -2,7 +2,7 @@
 
 #[cfg(target_os = "windows")]
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Stroke, Vec2};
-use mac_capture::Roi;
+use sight_relay_capture::Roi;
 #[cfg(target_os = "windows")]
 use std::sync::{Arc, Mutex};
 

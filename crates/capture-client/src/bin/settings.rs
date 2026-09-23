@@ -7,7 +7,7 @@ use global_hotkey::{
     GlobalHotKeyEvent, GlobalHotKeyManager,
     hotkey::{Code, HotKey, Modifiers},
 };
-use mac_capture::{Roi, capture_display, list_displays};
+use sight_relay_capture::{Roi, capture_display, list_displays};
 use std::sync::{Condvar, Mutex, OnceLock, mpsc};
 use std::{
     collections::HashMap,
@@ -2318,7 +2318,7 @@ impl App {
         let preview_path_arg = preview_path.to_string_lossy().to_string();
         match capture_display(c.display, Roi::full()).and_then(|image| {
             fs::write(&preview_path, image.bytes)
-                .map_err(|e| mac_capture::CaptureError::Screen(e.to_string()))
+                .map_err(|e| sight_relay_capture::CaptureError::Screen(e.to_string()))
         }) {
             Ok(()) => {}
             Err(e) => {
@@ -2661,8 +2661,8 @@ mod roi_editor_tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn windows_release_embeds_the_shared_application_icon() {
-        let manifest = include_str!("../../../../crates/mac-capture/Cargo.toml");
-        let build_script = include_str!("../../../../crates/mac-capture/build.rs");
+        let manifest = include_str!("../../../../crates/capture-client/Cargo.toml");
+        let build_script = include_str!("../../../../crates/capture-client/build.rs");
         let package_script = include_str!("../../../../deploy/build-windows.ps1");
         assert!(manifest.contains("winresource = \"0.1\""));
         assert!(build_script.contains("assets/sight-relay.ico"));

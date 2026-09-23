@@ -1,3 +1,3 @@
 [workspace]
 resolver = "2"
-members = ["crates/mac-capture", "apps/server"]
+members = ["crates/capture-client", "apps/server"]
